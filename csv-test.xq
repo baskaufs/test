@@ -27,21 +27,22 @@ xmlns:tc="http://rs.tdwg.org/ontology/voc/TaxonConcept#"
 xmlns:txn="http://lod.taxonconcept.org/ontology/txn.owl#"
 xmlns:local="http://bioimages.vanderbilt.edu/rdf/local#"
 >{
-(:let $textIndividuals := file:read-text("/home/baskaufs/Dropbox/source/individuals.csv") :)
-let $textIndividuals := file:read-text("C:\Dropbox\source\individuals.csv")
-let $xmlIndividuals := csv:parse($textIndividuals, { 'header' : true() })
 
-(:let $textDeterminations := file:read-text("/home/baskaufs/Dropbox/source/determinations.csv") :)
-let $textDeterminations := file:read-text("C:\Dropbox\source\determinations.csv")
-let $xmlDeterminations := csv:parse($textDeterminations, { 'header' : true() })
+(: Uses http:send-request to fetch CSV files from GitHub :)
+(: BaseX 8.0 requires 'map' keyword) before key/value maps :)
+(: Older versions of BaseX may not have this requirement :)
 
-(:let $textNames := file:read-text("/home/baskaufs/Dropbox/source/names.csv") :)
-let $textNames := file:read-text("C:\Dropbox\source\names.csv")
-let $xmlNames := csv:parse($textNames, { 'header' : true() })
+let $textIndividuals := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/individuals.csv'/>)[2]
+let $xmlIndividuals := csv:parse($textIndividuals, map { 'header' : true() })
 
-(:let $textSensu := file:read-text("/home/baskaufs/Dropbox/source/sensu.csv") :)
-let $textSensu := file:read-text("C:\Dropbox\source\sensu.csv")
-let $xmlSensu := csv:parse($textSensu, { 'header' : true() })
+let $textDeterminations := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/determinations.csv'/>)[2]
+let $xmlDeterminations := csv:parse($textDeterminations, map { 'header' : true() })
+
+let $textNames := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/names.csv'/>)[2]
+let $xmlNames := csv:parse($textNames, map { 'header' : true() })
+
+let $textSensu := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/sensu.csv'/>)[2]
+let $xmlSensu := csv:parse($textSensu, map { 'header' : true() })
 
 for $indRecord in $xmlIndividuals/csv/record
 
