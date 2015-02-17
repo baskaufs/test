@@ -19,7 +19,7 @@ xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
 xmlns:dc="http://purl.org/dc/elements/1.1/"
 xmlns:dcterms="http://purl.org/dc/terms/"
 xmlns:dwc="http://rs.tdwg.org/dwc/terms/"
-xmlns:dwcuri="http://rs.tdwg.org/dwc/uri/"
+xmlns:dwciri="http://rs.tdwg.org/dwc/iri/"
 xmlns:dsw="http://purl.org/dsw/"
 xmlns:xmp="http://ns.adobe.com/xap/1.0/"
 xmlns:foaf="http://xmlns.com/foaf/0.1/"
@@ -44,15 +44,33 @@ let $xmlNames := csv:parse($textNames, map { 'header' : true() })
 let $textSensu := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/sensu.csv'/>)[2]
 let $xmlSensu := csv:parse($textSensu, map { 'header' : true() })
 
+let $textImages := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/images.csv'/>)[2]
+let $xmlImages := csv:parse($textImages, map { 'header' : true() })
+
+let $textAgents := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/agents.csv'/>)[2]
+let $xmlAgents := csv:parse($textAgents, map { 'header' : true() })
+
 for $indRecord in $xmlIndividuals/csv/record
 
-return <rdf:Description rdf:about="{$indRecord/individualOrganismID/text()}">{
+return (
+      <rdf:Description rdf:about="{$indRecord/individualOrganismID/text()}">{
       <rdf:type rdf:resource="http://rs.tdwg.org/dwc/terms/Organism"/>,
       <rdf:type rdf:resource="http://purl.org/dc/terms/PhysicalResource"/>,
       <dcterms:type rdf:resource="http://purl.org/dc/terms/PhysicalResource"/>,
       <!--Basic information about the organism-->,
       <dcterms:identifier>{$indRecord/individualOrganismID/text()}</dcterms:identifier>,
-      <dcterms:description xml:lang="en">{"Organism of "}</dcterms:description>,
+      <dcterms:description xml:lang="en">{"Description of an organism having GUID: "||$indRecord/individualOrganismID/text()}</dcterms:description>,
+      <dwc:establishmentMeans>{$indRecord/dwc_establishmentMeans/text()}</dwc:establishmentMeans>,
+      <!--Relationships of the organism to other resources-->,
+      <foaf:isPrimaryTopicOf rdf:resource="{$indRecord/individualOrganismID/text()||".rdf"}" />,
+      <foaf:isPrimaryTopicOf rdf:resource="{$indRecord/individualOrganismID/text()||".htm"}" />,
+        for $depiction in $xmlImages/csv/record
+        where $depiction/foaf_depicts=$indRecord/individualOrganismID
+        return (
+               <foaf:depiction rdf:resource="{$depiction/dcterms_identifier}" />,
+               <dsw:hasDerivative rdf:resource="{$depiction/dcterms_identifier}" />
+               ),
+      <!--Identifications applied to the organism-->,
         for $detRecord in $xmlDeterminations/csv/record,
             $nameRecord in $xmlNames/csv/record,
             $sensuRecord in $xmlSensu/csv/record
@@ -67,9 +85,40 @@ return <rdf:Description rdf:about="{$indRecord/individualOrganismID/text()}">{
                   <dwc:genus>{$nameRecord/genus/text()}</dwc:genus>,
                   <dwc:specificEpithet>{$nameRecord/specificEpithet/text()}</dwc:specificEpithet>,
                   <dwc:taxonRank>{$nameRecord/taxonRank/text()}</dwc:taxonRank>,
-                  <dwc:vernacularName>{$nameRecord/vernacularName/text()}</dwc:vernacularName>
+                  <dwc:vernacularName xml:lang="en">{$nameRecord/vernacularName/text()}</dwc:vernacularName>,
+                  <dwc:scientificNameAuthorship>{$nameRecord/scientificNameAuthorship/text()}</dwc:scientificNameAuthorship>,
+                  (: TODO: needs to handle genera only and also ssp. and var. :)
+                  <dwc:scientificName>{$nameRecord/genus/text()||" "||$nameRecord/specificEpithet/text()}</dwc:scientificName>,
+                  <dwc:nameAccordingTo>{$sensuRecord/author/text()||", "||$sensuRecord/Date/text()||". "||$sensuRecord/publisher/text()||"."}</dwc:nameAccordingTo>,
+                  <local:secundumSignature>{$sensuRecord/citation_following_TCS_signature_fields/text()}</local:secundumSignature>,
+                  <dwciri:toTaxon><dwc:Taxon>
+                       <tc:accordingTo rdf:resource="{$sensuRecord/iri/text()}" />
+                       <tc:hasName rdf:resource="urn:lsid:ubio.org:namebank:{$nameRecord/ubioID/text()}"/>
+                  </dwc:Taxon></dwciri:toTaxon>,
+                  (: TODO: date needs to have xsd:date datatype, but what about year only? :)
+                  <dwc:dateIdentified>{$detRecord/dwc_dateIdentified/text()}</dwc:dateIdentified>,
+                  for $agentRecord in $xmlAgents/csv/record
+                  where $agentRecord/agent_code=$detRecord/dwc_identifiedBy
+                  return (
+                         <dwc:identifiedBy>{$agentRecord/Name/text()}</dwc:identifiedBy>,
+                         <dwciri:identifiedBy rdf:resource ="{$agentRecord/URI/text()}"/>
+                         )
               }</rdf:Description></dsw:hasIdentification>
-      }</rdf:Description>
+      }</rdf:Description>,
+       <rdf:Description rdf:about="{$indRecord/individualOrganismID/text()||".rdf"}">{
+            <rdf:type rdf:resource ="http://xmlns.com/foaf/0.1/Document" />,
+            <dc:format>application/rdf+xml</dc:format>,
+            <dcterms:identifier>{$indRecord/individualOrganismID/text()||".rdf"}</dcterms:identifier>,
+            <dcterms:description xml:lang="en">RDF formatted description of the organism {$indRecord/individualOrganismID/text()}</dcterms:description>,
+            <dc:creator>bioimages.vanderbilt.edu</dc:creator>,
+            <dcterms:creator rdf:resource="http://biocol.org/urn:lsid:biocol.org:col:35115"/>,
+            <dc:language>en</dc:language>,
+            <dcterms:language rdf:resource="http://id.loc.gov/vocabulary/iso639-2/eng"/>,
+            <dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2014-07-15T14:39:03</dcterms:modified>,
+            <dcterms:references rdf:resource="{$indRecord/individualOrganismID/text()}"/>,
+            <foaf:primaryTopic rdf:resource="{$indRecord/individualOrganismID/text()}"/>
+       }</rdf:Description>
+       )
 }</rdf:RDF>
 
 (:
