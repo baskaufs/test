@@ -114,7 +114,7 @@ return (
             <dcterms:creator rdf:resource="http://biocol.org/urn:lsid:biocol.org:col:35115"/>,
             <dc:language>en</dc:language>,
             <dcterms:language rdf:resource="http://id.loc.gov/vocabulary/iso639-2/eng"/>,
-            <dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2014-07-15T14:39:03</dcterms:modified>,
+            <dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">{fn:format-dateTime(fn:current-dateTime(), "[Y01]-[M01]-[D01]T[H01]:[m01]:[s01]")}</dcterms:modified>,
             <dcterms:references rdf:resource="{$indRecord/individualOrganismID/text()}"/>,
             <foaf:primaryTopic rdf:resource="{$indRecord/individualOrganismID/text()}"/>
        }</rdf:Description>
