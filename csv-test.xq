@@ -70,6 +70,7 @@ return (
                <foaf:depiction rdf:resource="{$depiction/dcterms_identifier}" />,
                <dsw:hasDerivative rdf:resource="{$depiction/dcterms_identifier}" />
                ),
+        <!--Occurrences documented for the organism-->,
         for $depiction in $xmlImages/csv/record
         where $depiction/foaf_depicts=$orgRecord/dcterms_identifier
         let $occurrenceDate := substring($depiction/dcterms_created/text(),1,10)
@@ -78,6 +79,17 @@ return (
               <rdf:Description rdf:about='{$orgRecord/dcterms_identifier/text()||"#"||$occurrenceDate}'>{
                 <rdf:type rdf:resource="http://rs.tdwg.org/dwc/terms/Occurrence"/>,
                 <dsw:occurrenceOf rdf:resource="{$orgRecord/dcterms_identifier/text()}"/>,
+                <dsw:atEvent>
+                    <rdf:Description rdf:about='{$orgRecord/dcterms_identifier/text()||"#"||$occurrenceDate||"eve"}'>{
+                      <rdf:type rdf:resource="http://rs.tdwg.org/dwc/terms/Event"/>,
+                      <dwc:eventDate rdf:datatype="http://www.w3.org/2001/XMLSchema#date">$occurrenceDate</dwc:eventDate>,
+                        <dsw:locatedAt>
+                           <rdf:Description rdf:about='{$orgRecord/dcterms_identifier/text()||"#"||$occurrenceDate||"loc"}'>{
+                             <rdf:type rdf:resource="http://purl.org/dc/terms/Location"/>
+                           }</rdf:Description>
+                        </dsw:locatedAt>
+                    }</rdf:Description>
+                </dsw:atEvent>
                 ($depiction/dcterms_identifier ! <dsw:hasEvidence rdf:resource="{.}"/>)
               }</rdf:Description>              
                ),
