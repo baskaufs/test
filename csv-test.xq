@@ -78,7 +78,7 @@ return (
               <rdf:Description rdf:about='{$orgRecord/dcterms_identifier/text()||"#"||$occurrenceDate}'>{
                 <rdf:type rdf:resource="http://rs.tdwg.org/dwc/terms/Occurrence"/>,
                 <dsw:occurrenceOf rdf:resource="{$orgRecord/dcterms_identifier/text()}"/>,
-                <dsw:hasEvidence rdf:resource="{$depiction/dcterms_identifier}"/>
+                ($depiction/dcterms_identifier ! <dsw:hasEvidence rdf:resource="{.}"/>)
               }</rdf:Description>              
                ),
       <!--Identifications applied to the organism-->,
