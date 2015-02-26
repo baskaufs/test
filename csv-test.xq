@@ -70,6 +70,17 @@ return (
                <foaf:depiction rdf:resource="{$depiction/dcterms_identifier}" />,
                <dsw:hasDerivative rdf:resource="{$depiction/dcterms_identifier}" />
                ),
+        for $depiction in $xmlImages/csv/record
+        where $depiction/foaf_depicts=$orgRecord/dcterms_identifier
+        let $occurrenceDate := substring($depiction/dcterms_created/text(),1,10)
+        group by $occurrenceDate
+        return (
+              <rdf:Description rdf:about='{$orgRecord/dcterms_identifier/text()||"#"||$occurrenceDate}'>{
+                <rdf:type rdf:resource="http://rs.tdwg.org/dwc/terms/Occurrence"/>,
+                <dsw:occurrenceOf rdf:resource="{$orgRecord/dcterms_identifier/text()}"/>,
+                <dsw:hasEvidence rdf:resource="{$depiction/dcterms_identifier}"/>
+              }</rdf:Description>              
+               ),
       <!--Identifications applied to the organism-->,
         for $detRecord in $xmlDeterminations/csv/record,
             $nameRecord in $xmlNames/csv/record,
@@ -114,7 +125,7 @@ return (
             <dcterms:creator rdf:resource="http://biocol.org/urn:lsid:biocol.org:col:35115"/>,
             <dc:language>en</dc:language>,
             <dcterms:language rdf:resource="http://id.loc.gov/vocabulary/iso639-2/eng"/>,
-            <dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">{fn:format-dateTime(fn:current-dateTime(), "[Y01]-[M01]-[D01]T[H01]:[m01]:[s01]")}</dcterms:modified>,
+            <dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">{fn:format-dateTime(fn:current-dateTime(), "[Y0001]-[M01]-[D01]T[H01]:[m01]:[s01]")}</dcterms:modified>,
             <dcterms:references rdf:resource="{$orgRecord/dcterms_identifier/text()}"/>,
             <foaf:primaryTopic rdf:resource="{$orgRecord/dcterms_identifier/text()}"/>
        }</rdf:Description>
