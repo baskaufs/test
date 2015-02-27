@@ -10,6 +10,7 @@ declare namespace xmp="http://ns.adobe.com/xap/1.0/";
 declare namespace foaf="http://xmlns.com/foaf/0.1/";
 declare namespace tc="http://rs.tdwg.org/ontology/voc/TaxonConcept#";
 declare namespace txn="http://lod.taxonconcept.org/ontology/txn.owl#";
+declare namespace geo="http://www.w3.org/2003/01/geo/wgs84_pos#";
 declare namespace local="http://bioimages.vanderbilt.edu/rdf/local#";
 
 
@@ -25,6 +26,7 @@ xmlns:xmp="http://ns.adobe.com/xap/1.0/"
 xmlns:foaf="http://xmlns.com/foaf/0.1/"
 xmlns:tc="http://rs.tdwg.org/ontology/voc/TaxonConcept#"
 xmlns:txn="http://lod.taxonconcept.org/ontology/txn.owl#"
+xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#"
 xmlns:local="http://bioimages.vanderbilt.edu/rdf/local#"
 >{
 
@@ -61,6 +63,7 @@ return (
       <dcterms:identifier>{$orgRecord/dcterms_identifier/text()}</dcterms:identifier>,
       <dcterms:description xml:lang="en">{"Description of an organism having GUID: "||$orgRecord/dcterms_identifier/text()}</dcterms:description>,
       <dwc:establishmentMeans>{$orgRecord/dwc_establishmentMeans/text()}</dwc:establishmentMeans>,
+      (: TODO: need to conditionally include colletion data if a living specimen :)
       <!--Relationships of the organism to other resources-->,
       <foaf:isPrimaryTopicOf rdf:resource="{$orgRecord/dcterms_identifier/text()||".rdf"}" />,
       <foaf:isPrimaryTopicOf rdf:resource="{$orgRecord/dcterms_identifier/text()||".htm"}" />,
@@ -75,38 +78,79 @@ return (
         where $depiction/foaf_depicts=$orgRecord/dcterms_identifier
         let $occurrenceDate := substring($depiction/dcterms_created/text(),1,10)
         group by $occurrenceDate
-        return (
+        return (<dsw:hasOccurrence>
               <rdf:Description rdf:about='{$orgRecord/dcterms_identifier/text()||"#"||$occurrenceDate}'>{
                 <rdf:type rdf:resource="http://rs.tdwg.org/dwc/terms/Occurrence"/>,
-                <dsw:occurrenceOf rdf:resource="{$orgRecord/dcterms_identifier/text()}"/>,
                 <dsw:atEvent>
                     <rdf:Description rdf:about='{$orgRecord/dcterms_identifier/text()||"#"||$occurrenceDate||"eve"}'>{
                       <rdf:type rdf:resource="http://rs.tdwg.org/dwc/terms/Event"/>,
-                      <dwc:eventDate rdf:datatype="http://www.w3.org/2001/XMLSchema#date">$occurrenceDate</dwc:eventDate>,
+                      <dwc:eventDate rdf:datatype="http://www.w3.org/2001/XMLSchema#date">{$occurrenceDate}</dwc:eventDate>,
                         <dsw:locatedAt>
                            <rdf:Description rdf:about='{$orgRecord/dcterms_identifier/text()||"#"||$occurrenceDate||"loc"}'>{
-                             <rdf:type rdf:resource="http://purl.org/dc/terms/Location"/>
+                             <rdf:type rdf:resource="http://purl.org/dc/terms/Location"/>,
+                             <geo:lat>{$orgRecord/dwc_decimalLatitude/text()}</geo:lat>,
+                             <dwc:decimalLatitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">{$orgRecord/dwc_decimalLatitude/text()}</dwc:decimalLatitude>,
+                             <geo:long>{$orgRecord/dwc_decimalLongitude/text()}</geo:long>,
+                             <dwc:decimalLongitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">{$orgRecord/dwc_decimalLongitude/text()}</dwc:decimalLongitude>,
+                             <dwc:coordinateUncertaintyInMeters rdf:datatype="http://www.w3.org/2001/XMLSchema#int">{$depiction[1]/dwc_coordinateUncertaintyInMeters/text()}</dwc:coordinateUncertaintyInMeters>,
+                             <dwc:geodeticDatum>{$depiction[1]/dwc_geodeticDatum/text()}</dwc:geodeticDatum>,
+                             <dwc:locality>{$depiction[1]/dwc_locality/text()}</dwc:locality>,
+                             <dwc:georeferenceRemarks>{$depiction[1]/dwc_georeferenceRemarks/text()}</dwc:georeferenceRemarks>,
+                             <dwc:continent>{$depiction[1]/dwc_continent/text()}</dwc:continent>,
+                             <dwc:countryCode>{$depiction[1]/dwc_countryCode/text()}</dwc:countryCode>,
+                             <dwc:stateProvince>{$depiction[1]/dwc_stateProvince/text()}</dwc:stateProvince>,
+                             <dwc:county>{$depiction[1]/dwc_county/text()}</dwc:county>,
+                             <dwciri:inDescribedPlace rdf:resource="{'http://sws.geonames.org/'||$depiction[1]/geonamesAdmin/text()||'/'}"/>,   
+                             if ($depiction[1]/geonamesOther/text() != "")
+                             then <dwciri:inDescribedPlace rdf:resource="{'http://sws.geonames.org/'||$depiction[1]/geonamesOther/text()||'/'}"/>
+                             else ()
                            }</rdf:Description>
                         </dsw:locatedAt>
                     }</rdf:Description>
-                </dsw:atEvent>
+                </dsw:atEvent>,
                 ($depiction/dcterms_identifier ! <dsw:hasEvidence rdf:resource="{.}"/>)
               }</rdf:Description>              
-               ),
+               </dsw:hasOccurrence>),
       <!--Identifications applied to the organism-->,
         for $detRecord in $xmlDeterminations/csv/record,
             $nameRecord in $xmlNames/csv/record,
             $sensuRecord in $xmlSensu/csv/record
         where $detRecord/dsw_identified=$orgRecord/dcterms_identifier and $nameRecord/dcterms_identifier=$detRecord/tsnID and $sensuRecord/dcterms_identifier=$detRecord/nameAccordingToID
         return <dsw:hasIdentification><rdf:Description rdf:about="{$orgRecord/dcterms_identifier/text()||"#"||$detRecord/dwc_dateIdentified/text()||$detRecord/identifiedBy/text()}">{
-                  <dcterms:description xml:lang="en">Determination of {$nameRecord/dwc_genus/text()||" "||$nameRecord/dwc_specificEpithet/text()||" sec. "||$sensuRecord/tcsSignature/text()}</dcterms:description>,
+                  if ($nameRecord/dwc_taxonRank/text() = "species")
+                  then <dcterms:description xml:lang="en">Determination of {$nameRecord/dwc_genus/text()||" "||$nameRecord/dwc_specificEpithet/text()||" sec. "||$sensuRecord/tcsSignature/text()}</dcterms:description>
+                  else 
+                    if ($nameRecord/dwc_taxonRank/text() = "genus")
+                    then <dcterms:description xml:lang="en">Determination of {$nameRecord/dwc_genus/text()||" sec. "||$sensuRecord/tcsSignature/text()}</dcterms:description>
+                    else 
+                      if ($nameRecord/dwc_taxonRank/text() = "subspecies")
+                      then <dcterms:description xml:lang="en">Determination of {$nameRecord/dwc_genus/text()||" "||$nameRecord/dwc_specificEpithet/text()||" ssp. "||$nameRecord/dwc_infraspecificEpithet/text()||" sec. "||$sensuRecord/tcsSignature/text()}</dcterms:description>
+                      else
+                        if ($nameRecord/dwc_taxonRank/text() = "variety")
+                        then <dcterms:description xml:lang="en">Determination of {$nameRecord/dwc_genus/text()||" "||$nameRecord/dwc_specificEpithet/text()||" var. "||$nameRecord/dwc_infraspecificEpithet/text()||" sec. "||$sensuRecord/tcsSignature/text()}</dcterms:description>
+                        else ()
+                  ,
                   <rdf:type rdf:resource ="http://rs.tdwg.org/dwc/terms/Identification" />,
                   <dsw:identifies rdf:resource ="{$orgRecord/dcterms_identifier/text()}" />,
                   <local:itisTsn>{$detRecord/tsnID/text()}</local:itisTsn>,
                   <dwc:class>{$nameRecord/dwc_class/text()}</dwc:class>,
-                  <dwc:order>{$nameRecord/dwc_order/text()}</dwc:order>,
-                  <dwc:genus>{$nameRecord/dwc_genus/text()}</dwc:genus>,
-                  <dwc:specificEpithet>{$nameRecord/dwc_specificEpithet/text()}</dwc:specificEpithet>,
+                  
+                  if ($nameRecord/dwc_order/text() != "")
+                  then <dwc:order>{$nameRecord/dwc_order/text()}</dwc:order>
+                  else (),
+                  
+                  if ($nameRecord/dwc_genus/text() != "")
+                  then <dwc:genus>{$nameRecord/dwc_genus/text()}</dwc:genus>
+                  else (),
+                  
+                  if ($nameRecord/dwc_specificEpithet/text() != "")
+                  then <dwc:specificEpithet>{$nameRecord/dwc_specificEpithet/text()}</dwc:specificEpithet>
+                  else (),
+                  
+                  if ($nameRecord/dwc_infraspecificEpithet/text() != "")
+                  then <dwc:infraspecificEpithet>{$nameRecord/dwc_infraspecificEpithet/text()}</dwc:infraspecificEpithet>
+                  else (),
+                  
                   <dwc:taxonRank>{$nameRecord/dwc_taxonRank/text()}</dwc:taxonRank>,
                   <dwc:vernacularName xml:lang="en">{$nameRecord/dwc_vernacularName/text()}</dwc:vernacularName>,
                   <dwc:scientificNameAuthorship>{$nameRecord/dwc_scientificNameAuthorship/text()}</dwc:scientificNameAuthorship>,
