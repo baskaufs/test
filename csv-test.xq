@@ -74,20 +74,38 @@ xmlns:blocal="http://bioimages.vanderbilt.edu/rdf/local#"
       <rdf:Description rdf:about="{$orgRecord/dcterms_identifier/text()}">{
       <rdf:type rdf:resource="http://rs.tdwg.org/dwc/terms/Organism"/>,
       <rdf:type rdf:resource="http://purl.org/dc/terms/PhysicalResource"/>,
-      <dcterms:type rdf:resource="http://purl.org/dc/terms/PhysicalResource"/>,
+      if ($orgRecord/dwc_collectionCode/text() != "")
+      then <dcterms:type rdf:resource="http://rs.tdwg.org/dwc/terms/LivingSpecimen"/>
+      else (),
       <!--Basic information about the organism-->,
       <dcterms:identifier>{$orgRecord/dcterms_identifier/text()}</dcterms:identifier>,
       <dcterms:description xml:lang="en">{"Description of an organism having GUID: "||$orgRecord/dcterms_identifier/text()}</dcterms:description>,
+      <dwc:organismScope>{$orgRecord/dwc_organismScope/text()}</dwc:organismScope>,
+      if ($orgRecord/dwc_organismRemarks/text() != "")
+      then <dwc:organismRemarks>{$orgRecord/dwc_organismRemarks/text()}</dwc:organismRemarks>
+      else (),
+      if ($orgRecord/dwc_organismName/text() != "")
+      then <dwc:organismName>{$orgRecord/dwc_organismName/text()}</dwc:organismName>
+      else (),
       <dwc:establishmentMeans>{$orgRecord/dwc_establishmentMeans/text()}</dwc:establishmentMeans>,
-      (: TODO: need to conditionally include colletion data if a living specimen :)
+      <blocal:cameo rdf:resource="{$orgRecord/cameo/text()}"/>,
+      if ($orgRecord/dwc_collectionCode/text() != "")
+      then (
+           for $agent in $xmlAgents/csv/record
+           where $agent/dcterms_identifier=$orgRecord/dwc_collectionCode
+           return <dwciri:inCollection rdf:resource="{$agent/iri/text()}"/>,
+           <dwc:collectionCode>{$orgRecord/dwc_collectionCode/text()}</dwc:collectionCode>,
+           <dwc:catalogNumber>{$orgRecord/dwc_catalogNumber/text()}</dwc:catalogNumber>
+           )
+      else (),
       <!--Relationships of the organism to other resources-->,
       <foaf:isPrimaryTopicOf rdf:resource="{$orgRecord/dcterms_identifier/text()||".rdf"}" />,
       <foaf:isPrimaryTopicOf rdf:resource="{$orgRecord/dcterms_identifier/text()||".htm"}" />,
         for $depiction in $xmlImages/csv/record
         where $depiction/foaf_depicts=$orgRecord/dcterms_identifier
         return (
-               <foaf:depiction rdf:resource="{$depiction/dcterms_identifier}" />,
-               <dsw:hasDerivative rdf:resource="{$depiction/dcterms_identifier}" />
+               <foaf:depiction rdf:resource="{$depiction/dcterms_identifier/text()}" />,
+               <dsw:hasDerivative rdf:resource="{$depiction/dcterms_identifier/text()}" />
                ),
         <!--Occurrences documented for the organism-->,
         for $depiction in $xmlImages/csv/record
@@ -109,13 +127,26 @@ xmlns:blocal="http://bioimages.vanderbilt.edu/rdf/local#"
                              <geo:long>{$orgRecord/dwc_decimalLongitude/text()}</geo:long>,
                              <dwc:decimalLongitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">{$orgRecord/dwc_decimalLongitude/text()}</dwc:decimalLongitude>,
                              <dwc:coordinateUncertaintyInMeters rdf:datatype="http://www.w3.org/2001/XMLSchema#int">{$depiction[1]/dwc_coordinateUncertaintyInMeters/text()}</dwc:coordinateUncertaintyInMeters>,
+                             if ($orgRecord/geo_alt/text() != "-9999")
+                             then (
+                               <geo:alt>{$orgRecord/geo_alt/text()}</geo:alt>,
+                               <dwc:minimumElevationInMeters rdf:datatype="http://www.w3.org/2001/XMLSchema#int">{$orgRecord/geo_alt/text()}</dwc:minimumElevationInMeters>,
+                               <dwc:maximumElevationInMeters rdf:datatype="http://www.w3.org/2001/XMLSchema#int">{$orgRecord/geo_alt/text()}</dwc:maximumElevationInMeters>
+                                  )
+                             else (),
                              <dwc:geodeticDatum>{$depiction[1]/dwc_geodeticDatum/text()}</dwc:geodeticDatum>,
                              <dwc:locality>{$depiction[1]/dwc_locality/text()}</dwc:locality>,
-                             <dwc:georeferenceRemarks>{$depiction[1]/dwc_georeferenceRemarks/text()}</dwc:georeferenceRemarks>,
+                             <dwc:georeferenceRemarks>{$orgRecord/dwc_georeferenceRemarks/text()}</dwc:georeferenceRemarks>,
                              <dwc:continent>{$depiction[1]/dwc_continent/text()}</dwc:continent>,
                              <dwc:countryCode>{$depiction[1]/dwc_countryCode/text()}</dwc:countryCode>,
                              <dwc:stateProvince>{$depiction[1]/dwc_stateProvince/text()}</dwc:stateProvince>,
                              <dwc:county>{$depiction[1]/dwc_county/text()}</dwc:county>,
+                             if ($depiction[1]/dwc_informationWithheld/text() != "")
+                             then <dwc:informationWithheld>{$depiction[1]/dwc_informationWithheld/text()}</dwc:informationWithheld>
+                             else (),
+                             if ($depiction[1]/dwc_dataGeneralizations/text() != "")
+                             then <dwc:dataGeneralizations>{$depiction[1]/dwc_dataGeneralizations/text()}</dwc:dataGeneralizations>
+                             else (),
                              <dwciri:inDescribedPlace rdf:resource="{'http://sws.geonames.org/'||$depiction[1]/geonamesAdmin/text()||'/'}"/>,   
                              if ($depiction[1]/geonamesOther/text() != "")
                              then <dwciri:inDescribedPlace rdf:resource="{'http://sws.geonames.org/'||$depiction[1]/geonamesOther/text()||'/'}"/>
@@ -127,6 +158,19 @@ xmlns:blocal="http://bioimages.vanderbilt.edu/rdf/local#"
                 ($depiction/dcterms_identifier ! <dsw:hasEvidence rdf:resource="{.}"/>)
               }</rdf:Description>              
                </dsw:hasOccurrence>),
+      if ($orgRecord/dwc_collectionCode/text() != "")
+      then (
+           <!-- The LivingSpecimen serves as evidence for the Occurrence documenting itself as an Organism -->,
+           <dcterms:type rdf:resource="http://rs.tdwg.org/dwc/terms/LivingSpecimen"/>,
+           <dsw:hasOccurrence>
+               <rdf:Description rdf:about='{$orgRecord/dcterms_identifier/text()||"#occ"}'>{
+               <rdf:type rdf:resource="http://rs.tdwg.org/dwc/terms/Occurrence"/>,
+               <dsw:hasEvidence rdf:resource='{$orgRecord/dcterms_identifier/text()}'/>,
+               <!-- dwc:recordedBy and the Event establishing the collection record would go here -->
+               }</rdf:Description>
+           </dsw:hasOccurrence>
+            )
+      else (),
       <!--Identifications applied to the organism-->,
         for $detRecord in $xmlDeterminations/csv/record,
             $nameRecord in $xmlNames/csv/record,
@@ -147,8 +191,11 @@ xmlns:blocal="http://bioimages.vanderbilt.edu/rdf/local#"
                         else ()
                   ,
                   <rdf:type rdf:resource ="http://rs.tdwg.org/dwc/terms/Identification" />,
-                  <dsw:identifies rdf:resource ="{$orgRecord/dcterms_identifier/text()}" />,
+                  if ($detRecord/dwc_identificationRemarks/text() != "")
+                  then <dwc:identificationRemarks>{$detRecord/dwc_identificationRemarks/text()}</dwc:identificationRemarks>
+                  else (),
                   <blocal:itisTsn>{$detRecord/tsnID/text()}</blocal:itisTsn>,
+                  <dwc:kingdom>{$nameRecord/dwc_kingdom/text()}</dwc:kingdom>,
                   <dwc:class>{$nameRecord/dwc_class/text()}</dwc:class>,
                   
                   if ($nameRecord/dwc_order/text() != "")
@@ -170,7 +217,6 @@ xmlns:blocal="http://bioimages.vanderbilt.edu/rdf/local#"
                   <dwc:taxonRank>{$nameRecord/dwc_taxonRank/text()}</dwc:taxonRank>,
                   <dwc:vernacularName xml:lang="en">{$nameRecord/dwc_vernacularName/text()}</dwc:vernacularName>,
                   <dwc:scientificNameAuthorship>{$nameRecord/dwc_scientificNameAuthorship/text()}</dwc:scientificNameAuthorship>,
-                  (: TODO: needs to handle genera only and also ssp. and var. :)
                   <dwc:scientificName>{$nameRecord/dwc_genus/text()||" "||$nameRecord/dwc_specificEpithet/text()}</dwc:scientificName>,
                   <dwc:nameAccordingTo>{$sensuRecord/dc_creator/text()||", "||$sensuRecord/dcterms_created/text()||". "||$sensuRecord/dc_publisher/text()||"."}</dwc:nameAccordingTo>,
                   <blocal:secundumSignature>{$sensuRecord/tcsSignature/text()}</blocal:secundumSignature>,
@@ -178,8 +224,13 @@ xmlns:blocal="http://bioimages.vanderbilt.edu/rdf/local#"
                        <tc:accordingTo rdf:resource="{$sensuRecord/iri/text()}" />
                        <tc:hasName rdf:resource="urn:lsid:ubio.org:namebank:{$nameRecord/ubioID/text()}"/>
                   </dwc:Taxon></dwciri:toTaxon>,
-                  (: TODO: date needs to have xsd:date datatype, but what about year only? :)
-                  <dwc:dateIdentified>{$detRecord/dwc_dateIdentified/text()}</dwc:dateIdentified>,
+                  if (string-length($detRecord/dwc_dateIdentified/text()) = 10)
+                  then (<dwc:dateIdentified rdf:datatype="http://www.w3.org/2001/XMLSchema#date">{$detRecord/dwc_dateIdentified/text()}</dwc:dateIdentified>)
+                  else (
+                       if (string-length($detRecord/dwc_dateIdentified/text()) = 4)
+                       then (<dwc:dateIdentified rdf:datatype="http://www.w3.org/2001/XMLSchema#gYear">{$detRecord/dwc_dateIdentified/text()}</dwc:dateIdentified>)
+                       else (<dwc:dateIdentified>{$detRecord/dwc_dateIdentified/text()}</dwc:dateIdentified>)
+                       ),
                   for $agentRecord in $xmlAgents/csv/record
                   where $agentRecord/dcterms_identifier=$detRecord/identifiedBy
                   return (
