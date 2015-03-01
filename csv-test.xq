@@ -21,6 +21,11 @@ declare function local:substring-after-last
   else $string
 };
 
+(: Create root folder if it doesn't already exist. :)
+let $rootPath := "c:\test"
+(: "file:create-dir($dir as xs:string) as empty-sequence()" will create a directory or do nothing if it already exists :)
+let $nothing := file:create-dir($rootPath)
+
 (: Uses http:send-request to fetch CSV files from GitHub :)
 (: BaseX 8.0 requires 'map' keyword) before key/value maps :)
 (: Older versions of BaseX may not have this requirement :)
@@ -49,14 +54,16 @@ let $xmlImages := csv:parse($textImages, map { 'header' : true() })
 let $textAgents := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/agents-small.csv'/>)[2]
 let $xmlAgents := csv:parse($textAgents, map { 'header' : true() })
 
+let $textLinks := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/links.csv'/>)[2]
+let $xmlLinks := csv:parse($textLinks, map { 'header' : true() })
+
 for $orgRecord in $xmlOrganisms/csv/record
 where $orgRecord/dcterms_identifier/text() !=""
 let $fileName := local:substring-after-last($orgRecord/dcterms_identifier/text(),"/")
 let $temp := substring-before($orgRecord/dcterms_identifier/text(),concat("/",$fileName))
 let $namespace := local:substring-after-last($temp,"/")
-let $filePath := concat("C:\test\", $namespace,"\", $fileName,".rdf")
-(: "file:create-dir($dir as xs:string) as empty-sequence()" will create a directory or do nothing if it already exists :)
-return file:write($filePath,
+let $filePath := concat($rootPath,"\", $namespace,"\", $fileName,".rdf")
+return (file:create-dir(concat($rootPath,"\",$namespace)), file:write($filePath,
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
 xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -237,7 +244,21 @@ xmlns:blocal="http://bioimages.vanderbilt.edu/rdf/local#"
                          <dwc:identifiedBy>{$agentRecord/dc_contributor/text()}</dwc:identifiedBy>,
                          <dwciri:identifiedBy rdf:resource ="{$agentRecord/iri/text()}"/>
                          )
-              }</rdf:Description></dsw:hasIdentification>
+              }</rdf:Description></dsw:hasIdentification>,
+              
+              for $linkRecord in $xmlLinks/csv/record
+              where $linkRecord/subjectIRI/text()=$orgRecord/dcterms_identifier/text()
+              return (
+                     element {$linkRecord/property/text()} 
+                         {
+                         <rdf:Description rdf:about="{$linkRecord/objectIRI/text()}">
+                           <rdf:type rdf:resource="{$linkRecord/objectType/text()}"/>
+                           <dcterms:description xml:lang="en">{$linkRecord/objectDescription/text()}</dcterms:description>
+                         </rdf:Description>
+                         }
+                     )
+              
+              
       }</rdf:Description>
        <rdf:Description rdf:about="{$orgRecord/dcterms_identifier/text()||".rdf"}">{
             <rdf:type rdf:resource ="http://xmlns.com/foaf/0.1/Document" />,
@@ -252,5 +273,5 @@ xmlns:blocal="http://bioimages.vanderbilt.edu/rdf/local#"
             <dcterms:references rdf:resource="{$orgRecord/dcterms_identifier/text()}"/>,
             <foaf:primaryTopic rdf:resource="{$orgRecord/dcterms_identifier/text()}"/>
        }</rdf:Description></rdf:RDF>
-       )
+       ))
 
