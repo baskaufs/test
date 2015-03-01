@@ -11,24 +11,15 @@ declare namespace foaf="http://xmlns.com/foaf/0.1/";
 declare namespace tc="http://rs.tdwg.org/ontology/voc/TaxonConcept#";
 declare namespace txn="http://lod.taxonconcept.org/ontology/txn.owl#";
 declare namespace geo="http://www.w3.org/2003/01/geo/wgs84_pos#";
-declare namespace local="http://bioimages.vanderbilt.edu/rdf/local#";
+declare namespace blocal="http://bioimages.vanderbilt.edu/rdf/local#";
 
-
-
-<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
-xmlns:dc="http://purl.org/dc/elements/1.1/"
-xmlns:dcterms="http://purl.org/dc/terms/"
-xmlns:dwc="http://rs.tdwg.org/dwc/terms/"
-xmlns:dwciri="http://rs.tdwg.org/dwc/iri/"
-xmlns:dsw="http://purl.org/dsw/"
-xmlns:xmp="http://ns.adobe.com/xap/1.0/"
-xmlns:foaf="http://xmlns.com/foaf/0.1/"
-xmlns:tc="http://rs.tdwg.org/ontology/voc/TaxonConcept#"
-xmlns:txn="http://lod.taxonconcept.org/ontology/txn.owl#"
-xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#"
-xmlns:local="http://bioimages.vanderbilt.edu/rdf/local#"
->{
+declare function local:substring-after-last
+($string as xs:string?, $delim as xs:string) as xs:string?
+{
+  if (contains($string, $delim))
+  then local:substring-after-last(substring-after($string, $delim),$delim)
+  else $string
+};
 
 (: Uses http:send-request to fetch CSV files from GitHub :)
 (: BaseX 8.0 requires 'map' keyword) before key/value maps :)
@@ -59,8 +50,27 @@ let $textAgents := http:send-request(<http:request method='get' href='https://ra
 let $xmlAgents := csv:parse($textAgents, map { 'header' : true() })
 
 for $orgRecord in $xmlOrganisms/csv/record
-
-return (
+where $orgRecord/dcterms_identifier/text() !=""
+let $fileName := local:substring-after-last($orgRecord/dcterms_identifier/text(),"/")
+let $temp := substring-before($orgRecord/dcterms_identifier/text(),concat("/",$fileName))
+let $namespace := local:substring-after-last($temp,"/")
+let $filePath := concat("C:\test\", $namespace,"\", $fileName,".rdf")
+(: "file:create-dir($dir as xs:string) as empty-sequence()" will create a directory or do nothing if it already exists :)
+return file:write($filePath,
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+xmlns:dc="http://purl.org/dc/elements/1.1/"
+xmlns:dcterms="http://purl.org/dc/terms/"
+xmlns:dwc="http://rs.tdwg.org/dwc/terms/"
+xmlns:dwciri="http://rs.tdwg.org/dwc/iri/"
+xmlns:dsw="http://purl.org/dsw/"
+xmlns:xmp="http://ns.adobe.com/xap/1.0/"
+xmlns:foaf="http://xmlns.com/foaf/0.1/"
+xmlns:tc="http://rs.tdwg.org/ontology/voc/TaxonConcept#"
+xmlns:txn="http://lod.taxonconcept.org/ontology/txn.owl#"
+xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#"
+xmlns:blocal="http://bioimages.vanderbilt.edu/rdf/local#"
+>
       <rdf:Description rdf:about="{$orgRecord/dcterms_identifier/text()}">{
       <rdf:type rdf:resource="http://rs.tdwg.org/dwc/terms/Organism"/>,
       <rdf:type rdf:resource="http://purl.org/dc/terms/PhysicalResource"/>,
@@ -138,7 +148,7 @@ return (
                   ,
                   <rdf:type rdf:resource ="http://rs.tdwg.org/dwc/terms/Identification" />,
                   <dsw:identifies rdf:resource ="{$orgRecord/dcterms_identifier/text()}" />,
-                  <local:itisTsn>{$detRecord/tsnID/text()}</local:itisTsn>,
+                  <blocal:itisTsn>{$detRecord/tsnID/text()}</blocal:itisTsn>,
                   <dwc:class>{$nameRecord/dwc_class/text()}</dwc:class>,
                   
                   if ($nameRecord/dwc_order/text() != "")
@@ -163,7 +173,7 @@ return (
                   (: TODO: needs to handle genera only and also ssp. and var. :)
                   <dwc:scientificName>{$nameRecord/dwc_genus/text()||" "||$nameRecord/dwc_specificEpithet/text()}</dwc:scientificName>,
                   <dwc:nameAccordingTo>{$sensuRecord/dc_creator/text()||", "||$sensuRecord/dcterms_created/text()||". "||$sensuRecord/dc_publisher/text()||"."}</dwc:nameAccordingTo>,
-                  <local:secundumSignature>{$sensuRecord/tcsSignature/text()}</local:secundumSignature>,
+                  <blocal:secundumSignature>{$sensuRecord/tcsSignature/text()}</blocal:secundumSignature>,
                   <dwciri:toTaxon><dwc:Taxon>
                        <tc:accordingTo rdf:resource="{$sensuRecord/iri/text()}" />
                        <tc:hasName rdf:resource="urn:lsid:ubio.org:namebank:{$nameRecord/ubioID/text()}"/>
@@ -177,7 +187,7 @@ return (
                          <dwciri:identifiedBy rdf:resource ="{$agentRecord/iri/text()}"/>
                          )
               }</rdf:Description></dsw:hasIdentification>
-      }</rdf:Description>,
+      }</rdf:Description>
        <rdf:Description rdf:about="{$orgRecord/dcterms_identifier/text()||".rdf"}">{
             <rdf:type rdf:resource ="http://xmlns.com/foaf/0.1/Document" />,
             <dc:format>application/rdf+xml</dc:format>,
@@ -190,14 +200,6 @@ return (
             <dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">{fn:format-dateTime(fn:current-dateTime(), "[Y0001]-[M01]-[D01]T[H01]:[m01]:[s01]")}</dcterms:modified>,
             <dcterms:references rdf:resource="{$orgRecord/dcterms_identifier/text()}"/>,
             <foaf:primaryTopic rdf:resource="{$orgRecord/dcterms_identifier/text()}"/>
-       }</rdf:Description>
+       }</rdf:Description></rdf:RDF>
        )
-}</rdf:RDF>
 
-(:
-for $year in (2010 to 2011)
-  let $fName := concat("C:\", $year, "B.xml")
-  for $x in doc('docs')//Doc
-    where $x/@year eq xs:string($year)
-    return file:append($fName, $x)
-:)
