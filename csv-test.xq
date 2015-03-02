@@ -21,6 +21,8 @@ declare function local:substring-after-last
   else $string
 };
 
+let $lastPubFolderUnix := "c:/test"
+
 (: Create root folder if it doesn't already exist. :)
 let $rootPath := "c:\test"
 (: "file:create-dir($dir as xs:string) as empty-sequence()" will create a directory or do nothing if it already exists :)
@@ -57,8 +59,11 @@ let $xmlAgents := csv:parse($textAgents, map { 'header' : true() })
 let $textLinks := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/links.csv'/>)[2]
 let $xmlLinks := csv:parse($textLinks, map { 'header' : true() })
 
+let $lastPublishedDoc := fn:doc(concat('file:///',$lastPubFolderUnix,'/last-published.xml'))
+let $lastPublished := $lastPublishedDoc/body/dcterms:modified/text()
+
 for $orgRecord in $xmlOrganisms/csv/record
-where $orgRecord/dcterms_identifier/text() !=""
+where $orgRecord/dcterms_identifier/text() !="" and  xs:dateTime($orgRecord/dcterms_modified/text()) > xs:dateTime($lastPublished)
 let $fileName := local:substring-after-last($orgRecord/dcterms_identifier/text(),"/")
 let $temp := substring-before($orgRecord/dcterms_identifier/text(),concat("/",$fileName))
 let $namespace := local:substring-after-last($temp,"/")
@@ -269,9 +274,15 @@ xmlns:blocal="http://bioimages.vanderbilt.edu/rdf/local#"
             <dcterms:creator rdf:resource="http://biocol.org/urn:lsid:biocol.org:col:35115"/>,
             <dc:language>en</dc:language>,
             <dcterms:language rdf:resource="http://id.loc.gov/vocabulary/iso639-2/eng"/>,
-            <dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">{fn:format-dateTime(fn:current-dateTime(), "[Y0001]-[M01]-[D01]T[H01]:[m01]:[s01]")}</dcterms:modified>,
+            <dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">{fn:current-dateTime()}</dcterms:modified>,
             <dcterms:references rdf:resource="{$orgRecord/dcterms_identifier/text()}"/>,
             <foaf:primaryTopic rdf:resource="{$orgRecord/dcterms_identifier/text()}"/>
        }</rdf:Description></rdf:RDF>
-       ))
-
+       )),
+let $lastPubFolder := "c:\test"
+let $lastPublished := fn:current-dateTime()
+return (file:write(concat($lastPubFolder,"\last-published.xml"),
+<body>
+<dcterms:modified>{$lastPublished}</dcterms:modified>
+</body>
+))
