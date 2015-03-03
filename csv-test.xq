@@ -35,6 +35,9 @@ let $nothing := file:create-dir($rootPath)
 (:let $textOrganisms := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/organisms.csv'/>)[2]:)
 let $textOrganisms := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/organisms-small.csv'/>)[2]
 let $xmlOrganisms := csv:parse($textOrganisms, map { 'header' : true() })
+(: When we implement Ken's output with pipe ("|") separators, the parse function will have to change to this:
+let $xmlOrganisms := csv:parse($textOrganisms, map { 'header' : true(),'separator' : "|" })
+:)
 
 (:let $textDeterminations := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/determinations.csv'/>)[2]:)
 let $textDeterminations := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/determinations-small.csv'/>)[2]
