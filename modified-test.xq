@@ -65,12 +65,16 @@ let $xmlLinks := csv:parse($textLinks, map { 'header' : true() })
 let $lastPublishedDoc := fn:doc(concat('file:///',$lastPubFolderUnix,'/last-published.xml'))
 let $lastPublished := $lastPublishedDoc/body/dcterms:modified/text()
 
-for $orgRecord in $xmlOrganisms/csv/record, $detRecord in $xmlDeterminations/csv/record, $imgRecord in $xmlImages/csv/record
+for $orgRecord in $xmlOrganisms/csv/record, 
+    $detRecord in $xmlDeterminations/csv/record, 
+    $imgRecord in $xmlImages/csv/record
 let $chkOrg := xs:dateTime($orgRecord/dcterms_modified/text()) > xs:dateTime($lastPublished)
 let $chkDet := xs:dateTime($detRecord/dcterms_modified/text()) > xs:dateTime($lastPublished)
 let $chkImg := xs:dateTime($imgRecord/dcterms_modified/text()) > xs:dateTime($lastPublished)
 
-where ($chkOrg or $chkDet or $chkImg) and $detRecord/dsw_identified/text()=$orgRecord/dcterms_identifier/text() and $orgRecord/dcterms_identifier/text()=$imgRecord/foaf_depicts/text()
+where ($chkOrg or $chkDet or $chkImg) 
+   and $detRecord/dsw_identified/text()=$orgRecord/dcterms_identifier/text() 
+   and $orgRecord/dcterms_identifier/text()=$imgRecord/foaf_depicts/text()
 return ($orgRecord/dcterms_identifier/text()
 (:,$detRecord/identifiedBy/text(),$imgRecord/dcterms_identifier/text():)
 )
