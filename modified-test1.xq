@@ -78,7 +78,6 @@ where ($chkOrg or $chkDet or $chkImg)
    and $detRecord/dsw_identified/text()=$orgRecord/dcterms_identifier/text() 
    and $orgRecord/dcterms_identifier/text()=$imgRecord/foaf_depicts/text()
    
-return ($orgRecord/dcterms_identifier/text()
-," "||$detRecord/tsnID/text()," "||$imgRecord/dcterms_identifier/text()
-||"&#10;"
-)
+let $writeOrganism := distinct-values($orgRecord/dcterms_identifier/text())
+   
+return $writeOrganism||"&#10;"
