@@ -66,7 +66,7 @@ let $lastPublishedDoc := fn:doc(concat('file:///',$lastPubFolderUnix,'/last-publ
 let $lastPublished := $lastPublishedDoc/body/dcterms:modified/text()
 
 for $orgRecord in $xmlOrganisms/csv/record
-where $orgRecord/dcterms_identifier/text() !="" and  xs:dateTime($orgRecord/dcterms_modified/text()) > xs:dateTime($lastPublished)
+where xs:dateTime($orgRecord/dcterms_modified/text()) > xs:dateTime($lastPublished)
 let $fileName := local:substring-after-last($orgRecord/dcterms_identifier/text(),"/")
 let $temp := substring-before($orgRecord/dcterms_identifier/text(),concat("/",$fileName))
 let $namespace := local:substring-after-last($temp,"/")
