@@ -68,13 +68,13 @@ let $lastPublished := $lastPublishedDoc/body/dcterms:modified/text()
 let $organismsToWriteDoc := file:read-text(concat('file:///',$lastPubFolderUnix,'/organisms-to-write.txt'))
 let $xmlOrganismsToWrite := csv:parse($organismsToWriteDoc, map { 'header' : false() })
 
-for $orgRecord in $xmlOrganisms/csv/record
-where xs:dateTime($orgRecord/dcterms_modified/text()) > xs:dateTime($lastPublished)
+for $orgRecord in $xmlOrganisms/csv/record, $toWrite in distinct-values($xmlOrganismsToWrite/csv/record)
+where $orgRecord/dcterms_identifier/text() = normalize-space($toWrite/entry/text())
 let $fileName := local:substring-after-last($orgRecord/dcterms_identifier/text(),"/")
 let $temp := substring-before($orgRecord/dcterms_identifier/text(),concat("/",$fileName))
 let $namespace := local:substring-after-last($temp,"/")
 let $filePath := concat($rootPath,"\", $namespace,"\", $fileName,".rdf")
-return ($xmlOrganismsToWrite, file:create-dir(concat($rootPath,"\",$namespace)), file:write($filePath,
+return ($toWrite/entry/text(), file:create-dir(concat($rootPath,"\",$namespace)), file:write($filePath,
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
 xmlns:dc="http://purl.org/dc/elements/1.1/"
