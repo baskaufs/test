@@ -21,13 +21,12 @@ declare function local:substring-after-last
   else $string
 };
 
-let $lastPubFolderUnix := "c:/test"
-let $lastPubFolder := "c:\test"
+let $localFilesFolderUnix := "c:/test"
+let $localFilesFolderPC := "c:\test"
 
-(: Create root folder if it doesn't already exist. :)
-let $rootPath := "c:\test"
+(: Create local files folder if it doesn't already exist. :)
 (: "file:create-dir($dir as xs:string) as empty-sequence()" will create a directory or do nothing if it already exists :)
-let $nothing := file:create-dir($rootPath)
+let $nothing := file:create-dir($localFilesFolderPC)
 
 (: Uses http:send-request to fetch CSV files from GitHub :)
 (: BaseX 8.0 requires 'map' keyword) before key/value maps :)
@@ -63,9 +62,16 @@ let $xmlAgents := csv:parse($textAgents, map { 'header' : true() })
 let $textLinks := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/links.csv'/>)[2]
 let $xmlLinks := csv:parse($textLinks, map { 'header' : true() })
 
-let $lastPublishedDoc := fn:doc(concat('file:///',$lastPubFolderUnix,'/last-published.xml'))
+(:
+!!!!!!!!! Needs to error trap condition where last published doc doesn't exist, i.e. new implementation !!!!!!
+:)
+
+let $lastPublishedDoc := fn:doc(concat('file:///',$localFilesFolderUnix,'/last-published.xml'))
 let $lastPublished := $lastPublishedDoc/body/dcterms:modified/text()
-return file:write(concat($lastPubFolder,"\organisms-to-write.txt"),
+(: use this if last published doc doesn't exist:  
+let $lastPublished := '2000-01-01T00:00:00-00:00'
+:)
+return (file:write(concat($localFilesFolderPC,"\organisms-to-write.txt"),
         for $orgRecord in $xmlOrganisms/csv/record, 
             $detRecord in $xmlDeterminations/csv/record, 
             $imgRecord in $xmlImages/csv/record
@@ -76,6 +82,6 @@ return file:write(concat($lastPubFolder,"\organisms-to-write.txt"),
         where ($chkOrg or $chkDet or $chkImg) 
            and $detRecord/dsw_identified/text()=$orgRecord/dcterms_identifier/text() 
            and $orgRecord/dcterms_identifier/text()=$imgRecord/foaf_depicts/text()
-        return $orgRecord/dcterms_identifier/text()||"&#10;"
-)
+        return ($orgRecord/dcterms_identifier/text(),"&#10;")
+))
 

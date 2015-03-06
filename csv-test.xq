@@ -21,7 +21,7 @@ declare function local:substring-after-last
   else $string
 };
 
-let $lastPubFolderUnix := "c:/test"
+let $localFilesFolderUnix := "c:/test"
 
 (: Create root folder if it doesn't already exist. :)
 let $rootPath := "c:\test"
@@ -62,19 +62,19 @@ let $xmlAgents := csv:parse($textAgents, map { 'header' : true() })
 let $textLinks := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/links.csv'/>)[2]
 let $xmlLinks := csv:parse($textLinks, map { 'header' : true() })
 
-let $lastPublishedDoc := fn:doc(concat('file:///',$lastPubFolderUnix,'/last-published.xml'))
+let $lastPublishedDoc := fn:doc(concat('file:///',$localFilesFolderUnix,'/last-published.xml'))
 let $lastPublished := $lastPublishedDoc/body/dcterms:modified/text()
 
-let $organismsToWriteDoc := file:read-text(concat('file:///',$lastPubFolderUnix,'/organisms-to-write.txt'))
+let $organismsToWriteDoc := file:read-text(concat('file:///',$localFilesFolderUnix,'/organisms-to-write.txt'))
 let $xmlOrganismsToWrite := csv:parse($organismsToWriteDoc, map { 'header' : false() })
 
-for $orgRecord in $xmlOrganisms/csv/record
-where xs:dateTime($orgRecord/dcterms_modified/text()) > xs:dateTime($lastPublished)
+for $orgRecord in $xmlOrganisms/csv/record, $organismsToWrite in distinct-values($xmlOrganismsToWrite/csv/record/entry)
+where $orgRecord/dcterms_identifier/text() = $organismsToWrite
 let $fileName := local:substring-after-last($orgRecord/dcterms_identifier/text(),"/")
 let $temp := substring-before($orgRecord/dcterms_identifier/text(),concat("/",$fileName))
 let $namespace := local:substring-after-last($temp,"/")
 let $filePath := concat($rootPath,"\", $namespace,"\", $fileName,".rdf")
-return ($xmlOrganismsToWrite, file:create-dir(concat($rootPath,"\",$namespace)), file:write($filePath,
+return (file:create-dir(concat($rootPath,"\",$namespace)), file:write($filePath,
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
 xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -285,9 +285,9 @@ xmlns:blocal="http://bioimages.vanderbilt.edu/rdf/local#"
             <foaf:primaryTopic rdf:resource="{$orgRecord/dcterms_identifier/text()}"/>
        }</rdf:Description></rdf:RDF>
        )),
-let $lastPubFolder := "c:\test"
+let $localFilesFolderPC := "c:\test"
 let $lastPublished := fn:current-dateTime()
-return (file:write(concat($lastPubFolder,"\last-published.xml"),
+return (file:write(concat($localFilesFolderPC,"\last-published.xml"),
 <body>
 <dcterms:modified>{$lastPublished}</dcterms:modified>
 </body>
