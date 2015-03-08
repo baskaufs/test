@@ -134,17 +134,17 @@ return (file:create-dir(concat($rootPath,"\",$namespace)), file:write($filePath,
     $nameRecord in $xmlNames/csv/record,
     $sensuRecord in $xmlSensu/csv/record
   where $detRecord/dsw_identified=$orgRecord/dcterms_identifier and $nameRecord/dcterms_identifier=$detRecord/tsnID and $sensuRecord/dcterms_identifier=$detRecord/nameAccordingToID
-  return if ($nameRecord/dwc_taxonRank/text() = "species")
-         then $nameRecord/dwc_genus/text()||" "||$nameRecord/dwc_specificEpithet/text()
+  return if ($nameRecord[1]/dwc_taxonRank/text() = "species")
+         then $nameRecord[1]/dwc_genus/text()||" "||$nameRecord[1]/dwc_specificEpithet/text()
          else 
-           if ($nameRecord/dwc_taxonRank/text() = "genus")
-           then $nameRecord/dwc_genus/text()
+           if ($nameRecord[1]/dwc_taxonRank/text() = "genus")
+           then $nameRecord[1]/dwc_genus/text()
            else 
-             if ($nameRecord/dwc_taxonRank/text() = "subspecies")
-             then $nameRecord/dwc_genus/text()||" "||$nameRecord/dwc_specificEpithet/text()||" ssp. "||$nameRecord/dwc_infraspecificEpithet/text()
+             if ($nameRecord[1]/dwc_taxonRank/text() = "subspecies")
+             then $nameRecord[1]/dwc_genus/text()||" "||$nameRecord[1]/dwc_specificEpithet/text()||" ssp. "||$nameRecord/dwc_infraspecificEpithet/text()
              else
-               if ($nameRecord/dwc_taxonRank/text() = "variety")
-               then $nameRecord/dwc_genus/text()||" "||$nameRecord/dwc_specificEpithet/text()||" var. "||$nameRecord/dwc_infraspecificEpithet/text()
+               if ($nameRecord[1]/dwc_taxonRank/text() = "variety")
+               then $nameRecord[1]/dwc_genus/text()||" "||$nameRecord[1]/dwc_specificEpithet/text()||" var. "||$nameRecord[1]/dwc_infraspecificEpithet/text()
                else ()
        }</em>
 
