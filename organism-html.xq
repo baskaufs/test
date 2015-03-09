@@ -21,6 +21,52 @@ declare function local:substring-after-last
   else $string
 };
 
+declare function local:get-taxon-name-markup
+($det as element()+,$name as element()+,$sensu as element()+,$orgID as xs:string)
+{
+   for $detRecord in $det,
+    $nameRecord in $name,
+    $sensuRecord in $sensu
+  where $detRecord/dsw_identified=$orgID and $nameRecord/dcterms_identifier=$detRecord/tsnID and $sensuRecord/dcterms_identifier=$detRecord/nameAccordingToID
+  let $organismScreen := $detRecord/dsw_identified/text()
+  group by $organismScreen
+  return if ($nameRecord[1]/dwc_taxonRank/text() = "species")
+         then (<em>{$nameRecord[1]/dwc_genus/text()||" "||$nameRecord[1]/dwc_specificEpithet/text()}</em>," ("||$nameRecord[1]/dwc_vernacularName/text()||")")
+         else 
+           if ($nameRecord[1]/dwc_taxonRank/text() = "genus")
+           then (<em>{$nameRecord[1]/dwc_genus/text()}</em>," ("||$nameRecord[1]/dwc_vernacularName/text(),")")
+           else 
+             if ($nameRecord[1]/dwc_taxonRank/text() = "subspecies")
+             then (<em>{$nameRecord[1]/dwc_genus/text()||" "||$nameRecord[1]/dwc_specificEpithet/text()}</em>," ssp. ",<em>{$nameRecord/dwc_infraspecificEpithet/text()}</em>, " (", $nameRecord[1]/dwc_vernacularName/text(),")")
+             else
+               if ($nameRecord[1]/dwc_taxonRank/text() = "variety")
+               then (<em>{$nameRecord[1]/dwc_genus/text()||" "||$nameRecord[1]/dwc_specificEpithet/text()}</em>," var. ",<em>{$nameRecord[1]/dwc_infraspecificEpithet/text()}</em>, " (", $nameRecord[1]/dwc_vernacularName/text(),")")
+               else ()
+};
+
+declare function local:get-taxon-name-clean
+($det as element()+,$name as element()+,$sensu as element()+,$orgID as xs:string)
+{
+   for $detRecord in $det,
+    $nameRecord in $name,
+    $sensuRecord in $sensu
+  where $detRecord/dsw_identified=$orgID and $nameRecord/dcterms_identifier=$detRecord/tsnID and $sensuRecord/dcterms_identifier=$detRecord/nameAccordingToID
+  let $organismScreen := $detRecord/dsw_identified/text()
+  group by $organismScreen
+  return if ($nameRecord[1]/dwc_taxonRank/text() = "species")
+         then ($nameRecord[1]/dwc_genus/text()||" "||$nameRecord[1]/dwc_specificEpithet/text()||" ("||$nameRecord[1]/dwc_vernacularName/text()||")")
+         else 
+           if ($nameRecord[1]/dwc_taxonRank/text() = "genus")
+           then ($nameRecord[1]/dwc_genus/text()||" ("||$nameRecord[1]/dwc_vernacularName/text(),")")
+           else 
+             if ($nameRecord[1]/dwc_taxonRank/text() = "subspecies")
+             then ($nameRecord[1]/dwc_genus/text()||" "||$nameRecord[1]/dwc_specificEpithet/text()||" ssp. "||$nameRecord/dwc_infraspecificEpithet/text()||" (", $nameRecord[1]/dwc_vernacularName/text(),")")
+             else
+               if ($nameRecord[1]/dwc_taxonRank/text() = "variety")
+               then ($nameRecord[1]/dwc_genus/text()||" "||$nameRecord[1]/dwc_specificEpithet/text()||" var. "||$nameRecord[1]/dwc_infraspecificEpithet/text()||" (", $nameRecord[1]/dwc_vernacularName/text(),")")
+               else ()
+};
+
 let $localFilesFolderUnix := "c:/test"
 
 (: Create root folder if it doesn't already exist. :)
@@ -70,6 +116,8 @@ let $xmlOrganismsToWrite := csv:parse($organismsToWriteDoc, map { 'header' : fal
 
 for $orgRecord in $xmlOrganisms/csv/record, $organismsToWrite in distinct-values($xmlOrganismsToWrite/csv/record/entry)
 where $orgRecord/dcterms_identifier/text() = $organismsToWrite
+let $taxonNameClean := local:get-taxon-name-clean($xmlDeterminations/csv/record,$xmlNames/csv/record,$xmlSensu/csv/record,$orgRecord/dcterms_identifier/text() )
+let $taxonNameMarkup := local:get-taxon-name-markup($xmlDeterminations/csv/record,$xmlNames/csv/record,$xmlSensu/csv/record,$orgRecord/dcterms_identifier/text() )
 let $fileName := local:substring-after-last($orgRecord/dcterms_identifier/text(),"/")
 let $temp := substring-before($orgRecord/dcterms_identifier/text(),concat("/",$fileName))
 let $namespace := local:substring-after-last($temp,"/")
@@ -84,7 +132,7 @@ return (file:create-dir(concat($rootPath,"\",$namespace)), file:write($filePath,
     <style type="text/css">
     {'@import "../composite-adj.css";'}
     </style>
-    <title>An individual of Juglans nigra</title>
+    <title>An individual of {$taxonNameClean}</title>
     <link rel="meta" type="application/rdf+xml" title="RDF" href="http://bioimages.vanderbilt.edu/kaufmannm/ke129.rdf" />
     <script type="text/javascript">{"
       // Determine if the device is an iPhone, iPad, or a regular browser
@@ -129,26 +177,7 @@ return (file:create-dir(concat($rootPath,"\",$namespace)), file:write($filePath,
           </td>
         </tr>
       </table><br/>
-      An individual of {    
-  for $detRecord in $xmlDeterminations/csv/record,
-    $nameRecord in $xmlNames/csv/record,
-    $sensuRecord in $xmlSensu/csv/record
-  where $detRecord/dsw_identified=$orgRecord/dcterms_identifier and $nameRecord/dcterms_identifier=$detRecord/tsnID and $sensuRecord/dcterms_identifier=$detRecord/nameAccordingToID
-  let $organismScreen := $detRecord/dsw_identified/text()
-  group by $organismScreen
-  return if ($nameRecord[1]/dwc_taxonRank/text() = "species")
-         then (<em>{$nameRecord[1]/dwc_genus/text()||" "||$nameRecord[1]/dwc_specificEpithet/text()}</em>," ("||$nameRecord[1]/dwc_vernacularName/text()||")")
-         else 
-           if ($nameRecord[1]/dwc_taxonRank/text() = "genus")
-           then (<em>{$nameRecord[1]/dwc_genus/text()}</em>," ("||$nameRecord[1]/dwc_vernacularName/text(),")")
-           else 
-             if ($nameRecord[1]/dwc_taxonRank/text() = "subspecies")
-             then (<em>{$nameRecord[1]/dwc_genus/text()||" "||$nameRecord[1]/dwc_specificEpithet/text()}</em>," ssp. ",<em>{$nameRecord/dwc_infraspecificEpithet/text()}</em>, " (", $nameRecord[1]/dwc_vernacularName/text(),")")
-             else
-               if ($nameRecord[1]/dwc_taxonRank/text() = "variety")
-               then (<em>{$nameRecord[1]/dwc_genus/text()||" "||$nameRecord[1]/dwc_specificEpithet/text()}</em>," var. ",<em>{$nameRecord[1]/dwc_infraspecificEpithet/text()}</em>, " (", $nameRecord[1]/dwc_vernacularName/text(),")")
-               else ()
-       }
+      An individual of {$taxonNameMarkup}
       <br/>
       <h5>Permanent identifier for the individual:</h5><br/>
       <h5><strong property="dcterms:identifier">{$orgRecord/dcterms_identifier/text()}</strong></h5><br/>

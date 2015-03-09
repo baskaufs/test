@@ -41,7 +41,6 @@ declare function local:get-taxon-name
                if ($nameRecord[1]/dwc_taxonRank/text() = "variety")
                then (<em>{$nameRecord[1]/dwc_genus/text()||" "||$nameRecord[1]/dwc_specificEpithet/text()}</em>," var. ",<em>{$nameRecord[1]/dwc_infraspecificEpithet/text()}</em>, " (", $nameRecord[1]/dwc_vernacularName/text(),")")
                else ()
- 
 };
 
 
@@ -79,4 +78,4 @@ let $xmlAgents := csv:parse($textAgents, map { 'header' : true() })
 let $textLinks := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/links.csv'/>)[2]
 let $xmlLinks := csv:parse($textLinks, map { 'header' : true() })
 
-return local:get-taxon-name ($xmlDeterminations/csv/record,$xmlNames/csv/record,$xmlSensu/csv/record,"http://bioimages.vanderbilt.edu/thomas/0140-01")
+return local:get-taxon-name($xmlDeterminations/csv/record,$xmlNames/csv/record,$xmlSensu/csv/record,"http://bioimages.vanderbilt.edu/thomas/0140-01")
