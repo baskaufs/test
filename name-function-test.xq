@@ -21,11 +21,11 @@ declare function local:substring-after-last
   else $string
 };
 declare function local:get-taxon-name
-($det as xs:string+,$name as xs:string+,$sensu as xs:string+,$orgID as xs:string) as xs:string
+($det as element()+,$name as element()+,$sensu as element()+,$orgID as xs:string)
 {
-   for $detRecord in $det/csv/record,
-    $nameRecord in $name/csv/record,
-    $sensuRecord in $sensu/csv/record
+   for $detRecord in $det,
+    $nameRecord in $name,
+    $sensuRecord in $sensu
   where $detRecord/dsw_identified=$orgID and $nameRecord/dcterms_identifier=$detRecord/tsnID and $sensuRecord/dcterms_identifier=$detRecord/nameAccordingToID
   let $organismScreen := $detRecord/dsw_identified/text()
   group by $organismScreen
@@ -79,4 +79,4 @@ let $xmlAgents := csv:parse($textAgents, map { 'header' : true() })
 let $textLinks := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/links.csv'/>)[2]
 let $xmlLinks := csv:parse($textLinks, map { 'header' : true() })
 
-return local:get-taxon-name ($xmlDeterminations,$xmlNames,$xmlSensu,"http://bioimages.vanderbilt.edu/thomas/0140-01")
+return local:get-taxon-name ($xmlDeterminations/csv/record,$xmlNames/csv/record,$xmlSensu/csv/record,"http://bioimages.vanderbilt.edu/thomas/0140-01")
