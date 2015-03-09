@@ -129,24 +129,31 @@ return (file:create-dir(concat($rootPath,"\",$namespace)), file:write($filePath,
           </td>
         </tr>
       </table><br/>
-      An individual of <em>{    
+      An individual of {    
   for $detRecord in $xmlDeterminations/csv/record,
     $nameRecord in $xmlNames/csv/record,
     $sensuRecord in $xmlSensu/csv/record
   where $detRecord/dsw_identified=$orgRecord/dcterms_identifier and $nameRecord/dcterms_identifier=$detRecord/tsnID and $sensuRecord/dcterms_identifier=$detRecord/nameAccordingToID
+  let $organismScreen := $detRecord/dsw_identified/text()
+  group by $organismScreen
   return if ($nameRecord[1]/dwc_taxonRank/text() = "species")
-         then $nameRecord[1]/dwc_genus/text()||" "||$nameRecord[1]/dwc_specificEpithet/text()
+         then (<em>{$nameRecord[1]/dwc_genus/text()||" "||$nameRecord[1]/dwc_specificEpithet/text()}</em>," ("||$nameRecord[1]/dwc_vernacularName/text()||")")
          else 
            if ($nameRecord[1]/dwc_taxonRank/text() = "genus")
-           then $nameRecord[1]/dwc_genus/text()
+           then (<em>{$nameRecord[1]/dwc_genus/text()}</em>," ("||$nameRecord[1]/dwc_vernacularName/text(),")")
            else 
              if ($nameRecord[1]/dwc_taxonRank/text() = "subspecies")
-             then $nameRecord[1]/dwc_genus/text()||" "||$nameRecord[1]/dwc_specificEpithet/text()||" ssp. "||$nameRecord/dwc_infraspecificEpithet/text()
+             then (<em>{$nameRecord[1]/dwc_genus/text()||" "||$nameRecord[1]/dwc_specificEpithet/text()}</em>," ssp. ",<em>{$nameRecord/dwc_infraspecificEpithet/text()}</em>, " (", $nameRecord[1]/dwc_vernacularName/text(),")")
              else
                if ($nameRecord[1]/dwc_taxonRank/text() = "variety")
-               then $nameRecord[1]/dwc_genus/text()||" "||$nameRecord[1]/dwc_specificEpithet/text()||" var. "||$nameRecord[1]/dwc_infraspecificEpithet/text()
+               then (<em>{$nameRecord[1]/dwc_genus/text()||" "||$nameRecord[1]/dwc_specificEpithet/text()}</em>," var. ",<em>{$nameRecord[1]/dwc_infraspecificEpithet/text()}</em>, " (", $nameRecord[1]/dwc_vernacularName/text(),")")
                else ()
-       }</em>
+       }
+      <br/>
+      <h5>Permanent identifier for the individual:</h5><br/>
+      <h5><strong property="dcterms:identifier">{$orgRecord/dcterms_identifier/text()}</strong></h5><br/>
+      <br/>
+
 
     
     </div>
