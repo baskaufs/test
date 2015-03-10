@@ -122,6 +122,12 @@ let $fileName := local:substring-after-last($orgRecord/dcterms_identifier/text()
 let $temp := substring-before($orgRecord/dcterms_identifier/text(),concat("/",$fileName))
 let $namespace := local:substring-after-last($temp,"/")
 let $filePath := concat($rootPath,"\", $namespace,"\", $fileName,".htm")
+let $tempQuoted1 := '"Image of organism" title="Image of organism" src="'
+let $tempQuoted2 := '" height="'
+let $tempQuoted3 := '"/>'
+let $googleMapString := "http://maps.google.com/maps?output=classic&amp;q=loc:"||$orgRecord/dwc_decimalLatitude/text()||","||$orgRecord/dwc_decimalLongitude/text()||"&amp;t=h&amp;z=16"
+let $qrCodeString := "http://chart.apis.google.com/chart?chs=100x100&amp;cht=qr&amp;chld=|1&amp;chl=http%3A%2F%2Fbioimages.vanderbilt.edu%2F"||$namespace||"%2F"||$fileName||".htm"
+let $loadDatabaseString := 'window.location.replace("../metadata.htm?'||$namespace||'/'||$fileName||'/metadata/ind");'
 return (file:create-dir(concat($rootPath,"\",$namespace)), file:write($filePath,
 <html>
   <head>
@@ -179,9 +185,54 @@ return (file:create-dir(concat($rootPath,"\",$namespace)), file:write($filePath,
       </table><br/>
       An individual of {$taxonNameMarkup}
       <br/>
+      
+      <a href="../baskauf/90694.htm"><span id="orgimage"><img alt="Image of organism" title="Image of organism" src="../lq/baskauf/w90694.jpg" /></span></a><br/>
+(: TODO: This is escaping the lt and gt in the javascript :)      
+<script type="text/javascript">{"
+if (document.documentElement.clientWidth<400)
+     {
+imgHeight=document.documentElement.clientHeight-100;
+if (imgHeight>480)
+          {
+          imgHeight=480;
+          }
+document.getElementById('orgimage').innerHTML='<img alt="||$tempQuoted1||"../lq/baskauf/w90694.jpg"||$tempQuoted2||"'+imgHeight+'"||$tempQuoted3||"';
+     }
+"}</script>
+
       <h5>Permanent identifier for the individual:</h5><br/>
       <h5><strong property="dcterms:identifier">{$orgRecord/dcterms_identifier/text()}</strong></h5><br/>
       <br/>
+      <table>
+        <tr>
+          <td><a href="../index.htm"><img alt="home button" src="../logo.jpg" height="88" /></a></td>
+          <td><a target="top" href="{$googleMapString}"><img alt="FindMe button" src="../findme-button.jpg" height="88" /></a></td>
+          <td><img src="{$qrCodeString}" alt="QR Code" /></td>
+        </tr>
+      </table>
+      <br/>
+(: TODO: it's also escaping the quotes here :)
+      <h5><a href="#" onclick='{$loadDatabaseString}'>&#8239;Load database and switch to thumbnail view</a>
+      </h5><br/>
+      <br/>
+      <h5>
+        <em>Use this URL as a stable link to this page:</em>
+        <br/>
+        <a href="{$fileName||'.htm'}">http://bioimages.vanderbilt.edu/{$namespace}/{$fileName}.htm</a>
+      </h5><br/>
+      <br/>,
+      if ($orgRecord/dwc_collectionCode/text() != "")
+      then (
+           for $agent in $xmlAgents/csv/record
+           where $agent/dcterms_identifier=$orgRecord/dwc_collectionCode
+           return <h5>This individual is a living specimen that is part of the&#8239;
+           <a href="{$agent/contactURL/text()}">{$agent/dc_contributor/text()}</a>
+           &#8239;with the local identifier {$orgRecord/dwc_catalogNumber/text()}.</h5><br/>
+              <br/>
+           )
+      else (),
+
+      <h5><em>This particular individual is believed to be </em><strong>{$orgRecord/dwc_establishmentMeans/text()}</strong>.</h5><br/><br/>
 
 
     
