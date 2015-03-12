@@ -129,7 +129,7 @@ let $googleMapString := "http://maps.google.com/maps?output=classic&amp;q=loc:"|
 let $qrCodeString := "http://chart.apis.google.com/chart?chs=100x100&amp;cht=qr&amp;chld=|1&amp;chl=http%3A%2F%2Fbioimages.vanderbilt.edu%2F"||$namespace||"%2F"||$fileName||".htm"
 let $loadDatabaseString := 'window.location.replace("../metadata.htm?'||$namespace||'/'||$fileName||'/metadata/ind");'
 return (file:create-dir(concat($rootPath,"\",$namespace)), file:write($filePath,
-<html>
+<html>{
   <head>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
     <meta name="viewport" content="width=320, initial-scale=1" />
@@ -153,14 +153,14 @@ return (file:create-dir(concat($rootPath,"\",$namespace)), file:write($filePath,
        }
     "}
     </script>
-  </head>
-  <body vocab="http://schema.org/" prefix="dcterms: http://purl.org/dc/terms/ foaf: http://xmlns.com/foaf/0.1/">
+  </head>,
+  <body vocab="http://schema.org/" prefix="dcterms: http://purl.org/dc/terms/ foaf: http://xmlns.com/foaf/0.1/">{
     <div resource="{$orgRecord/dcterms_identifier/text()||'.htm'}" typeof="foaf:Document WebPage" >
       <span property="about" resource="{$orgRecord/dcterms_identifier/text()}"></span>
       <span property="dateModified" content="{fn:current-dateTime()}"></span>
-    </div>
+    </div>,
     (: !!!!!!!!!!! TODO: need to implement buttons here !!!!!!!!!!!!!! :)
-    <div id="paste" resource="{$orgRecord/dcterms_identifier/text()}" typeof="dcterms:PhysicalResource">
+    <div id="paste" resource="{$orgRecord/dcterms_identifier/text()}" typeof="dcterms:PhysicalResource">{
       <table>
         <tr>
           <td>
@@ -182,13 +182,15 @@ return (file:create-dir(concat($rootPath,"\",$namespace)), file:write($filePath,
             <a href="../vanderbilt/11-23.htm"><img alt="next button" src="../buttons/main-next.png" height="58" /></a>
           </td>
         </tr>
-      </table><br/>
-      An individual of {$taxonNameMarkup}
-      <br/>
+      </table>,
+      <br/>,
+      <span>An individual of {$taxonNameMarkup}</span>,
+      <br/>,
       
-      <a href="../baskauf/90694.htm"><span id="orgimage"><img alt="Image of organism" title="Image of organism" src="../lq/baskauf/w90694.jpg" /></span></a><br/>
+      <a href="../baskauf/90694.htm"><span id="orgimage"><img alt="Image of organism" title="Image of organism" src="../lq/baskauf/w90694.jpg" /></span></a>,
+      <br/>,
 (: TODO: This is escaping the lt and gt in the javascript :)      
-<script type="text/javascript">{"
+      <script type="text/javascript">{"
 if (document.documentElement.clientWidth<400)
      {
 imgHeight=document.documentElement.clientHeight-100;
@@ -198,242 +200,68 @@ if (imgHeight>480)
           }
 document.getElementById('orgimage').innerHTML='<img alt="||$tempQuoted1||"../lq/baskauf/w90694.jpg"||$tempQuoted2||"'+imgHeight+'"||$tempQuoted3||"';
      }
-"}</script>
+"}
+      </script>,
 
-      <h5>Permanent identifier for the individual:</h5><br/>
-      <h5><strong property="dcterms:identifier">{$orgRecord/dcterms_identifier/text()}</strong></h5><br/>
-      <br/>
+      <h5>Permanent identifier for the individual:</h5>,
+      <br/>,
+      <h5><strong property="dcterms:identifier">{$orgRecord/dcterms_identifier/text()}</strong></h5>,
+      <br/>,
+      <br/>,
       <table>
         <tr>
           <td><a href="../index.htm"><img alt="home button" src="../logo.jpg" height="88" /></a></td>
           <td><a target="top" href="{$googleMapString}"><img alt="FindMe button" src="../findme-button.jpg" height="88" /></a></td>
           <td><img src="{$qrCodeString}" alt="QR Code" /></td>
         </tr>
-      </table>
-      <br/>
+      </table>,
+      <br/>,
 (: TODO: it's also escaping the quotes here :)
       <h5><a href="#" onclick='{$loadDatabaseString}'>&#8239;Load database and switch to thumbnail view</a>
-      </h5><br/>
-      <br/>
+      </h5>,
+      <br/>,
+      <br/>,
       <h5>
         <em>Use this URL as a stable link to this page:</em>
         <br/>
         <a href="{$fileName||'.htm'}">http://bioimages.vanderbilt.edu/{$namespace}/{$fileName}.htm</a>
-      </h5><br/>
-      <br/>,(:
+      </h5>,
+      <br/>,
+      <br/>,
       if ($orgRecord/dwc_collectionCode/text() != "")
       then (
            for $agent in $xmlAgents/csv/record
            where $agent/dcterms_identifier=$orgRecord/dwc_collectionCode
-           return <h5>This individual is a living specimen that is part of the&#8239;
+           return (<h5>This individual is a living specimen that is part of the&#8239;
            <a href="{$agent/contactURL/text()}">{$agent/dc_contributor/text()}</a>
-           &#8239;with the local identifier {$orgRecord/dwc_catalogNumber/text()}.</h5><br/>
-              <br/>
+           &#8239;with the local identifier {$orgRecord/dwc_catalogNumber/text()}.</h5>,<br/>,
+              <br/>)
            )
       else (),
-:)
-      <h5><em>This particular individual is believed to be </em><strong>{$orgRecord/dwc_establishmentMeans/text()}</strong>.</h5><br/><br/>
 
+      <h5><em>This particular individual is believed to be </em><strong>{$orgRecord/dwc_establishmentMeans/text()}</strong>.</h5>,
+      <br/>,
+      <br/>,
 
+      <h3><strong>Identifications:</strong></h3>,
+      <br/>,
+      <h2><em>Quercus velutina</em></h2>,
+      <span> </span>,
+      <h3>Lam.</h3>,
+      <h6>sec. fna.org 1993</h6>,
+      <br/>,
+
+      <span>common name: black oak</span>,
+      <br/>,
+      <span>family: Fagaceae</span>,
+      <br/>,
+      <h6><em>Identified </em>2002-06-25<em> by </em> <a href="http://bioimages.vanderbilt.edu/contact/baskauf">Steven J. Baskauf</a></h6>,
+      <br/>,
+      <br/>
     
-    </div>
-      <rdf:Description rdf:about="{$orgRecord/dcterms_identifier/text()}">{
-      <rdf:type rdf:resource="http://rs.tdwg.org/dwc/terms/Organism"/>,
-      <rdf:type rdf:resource="http://purl.org/dc/terms/PhysicalResource"/>,
-      if ($orgRecord/dwc_collectionCode/text() != "")
-      then <dcterms:type rdf:resource="http://rs.tdwg.org/dwc/terms/LivingSpecimen"/>
-      else (),
-      <!--Basic information about the organism-->,
-      <dcterms:identifier>{$orgRecord/dcterms_identifier/text()}</dcterms:identifier>,
-      <dcterms:description xml:lang="en">{"Description of an organism having GUID: "||$orgRecord/dcterms_identifier/text()}</dcterms:description>,
-      <dwc:organismScope>{$orgRecord/dwc_organismScope/text()}</dwc:organismScope>,
-      if ($orgRecord/dwc_organismRemarks/text() != "")
-      then <dwc:organismRemarks>{$orgRecord/dwc_organismRemarks/text()}</dwc:organismRemarks>
-      else (),
-      if ($orgRecord/dwc_organismName/text() != "")
-      then <dwc:organismName>{$orgRecord/dwc_organismName/text()}</dwc:organismName>
-      else (),
-      <dwc:establishmentMeans>{$orgRecord/dwc_establishmentMeans/text()}</dwc:establishmentMeans>,
-      <blocal:cameo rdf:resource="{$orgRecord/cameo/text()}"/>,
-      if ($orgRecord/dwc_collectionCode/text() != "")
-      then (
-           for $agent in $xmlAgents/csv/record
-           where $agent/dcterms_identifier=$orgRecord/dwc_collectionCode
-           return <dwciri:inCollection rdf:resource="{$agent/iri/text()}"/>,
-           <dwc:collectionCode>{$orgRecord/dwc_collectionCode/text()}</dwc:collectionCode>,
-           <dwc:catalogNumber>{$orgRecord/dwc_catalogNumber/text()}</dwc:catalogNumber>
-           )
-      else (),
-      <!--Relationships of the organism to other resources-->,
-      <foaf:isPrimaryTopicOf rdf:resource="{$orgRecord/dcterms_identifier/text()||".rdf"}" />,
-      <foaf:isPrimaryTopicOf rdf:resource="{$orgRecord/dcterms_identifier/text()||".htm"}" />,
-        for $depiction in $xmlImages/csv/record
-        where $depiction/foaf_depicts=$orgRecord/dcterms_identifier
-        return (
-               <foaf:depiction rdf:resource="{$depiction/dcterms_identifier/text()}" />,
-               <dsw:hasDerivative rdf:resource="{$depiction/dcterms_identifier/text()}" />
-               ),
-        <!--Occurrences documented for the organism-->,
-        for $depiction in $xmlImages/csv/record
-        where $depiction/foaf_depicts=$orgRecord/dcterms_identifier
-        let $occurrenceDate := substring($depiction/dcterms_created/text(),1,10)
-        group by $occurrenceDate
-        return (<dsw:hasOccurrence>
-              <rdf:Description rdf:about='{$orgRecord/dcterms_identifier/text()||"#"||$occurrenceDate}'>{
-                <rdf:type rdf:resource="http://rs.tdwg.org/dwc/terms/Occurrence"/>,
-                <dsw:atEvent>
-                    <rdf:Description rdf:about='{$orgRecord/dcterms_identifier/text()||"#"||$occurrenceDate||"eve"}'>{
-                      <rdf:type rdf:resource="http://rs.tdwg.org/dwc/terms/Event"/>,
-                      <dwc:eventDate rdf:datatype="http://www.w3.org/2001/XMLSchema#date">{$occurrenceDate}</dwc:eventDate>,
-                        <dsw:locatedAt>
-                           <rdf:Description rdf:about='{$orgRecord/dcterms_identifier/text()||"#"||$occurrenceDate||"loc"}'>{
-                             <rdf:type rdf:resource="http://purl.org/dc/terms/Location"/>,
-                             <geo:lat>{$orgRecord/dwc_decimalLatitude/text()}</geo:lat>,
-                             <dwc:decimalLatitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">{$orgRecord/dwc_decimalLatitude/text()}</dwc:decimalLatitude>,
-                             <geo:long>{$orgRecord/dwc_decimalLongitude/text()}</geo:long>,
-                             <dwc:decimalLongitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">{$orgRecord/dwc_decimalLongitude/text()}</dwc:decimalLongitude>,
-                             <dwc:coordinateUncertaintyInMeters rdf:datatype="http://www.w3.org/2001/XMLSchema#int">{$depiction[1]/dwc_coordinateUncertaintyInMeters/text()}</dwc:coordinateUncertaintyInMeters>,
-                             if ($orgRecord/geo_alt/text() != "-9999")
-                             then (
-                               <geo:alt>{$orgRecord/geo_alt/text()}</geo:alt>,
-                               <dwc:minimumElevationInMeters rdf:datatype="http://www.w3.org/2001/XMLSchema#int">{$orgRecord/geo_alt/text()}</dwc:minimumElevationInMeters>,
-                               <dwc:maximumElevationInMeters rdf:datatype="http://www.w3.org/2001/XMLSchema#int">{$orgRecord/geo_alt/text()}</dwc:maximumElevationInMeters>
-                                  )
-                             else (),
-                             <dwc:geodeticDatum>{$depiction[1]/dwc_geodeticDatum/text()}</dwc:geodeticDatum>,
-                             <dwc:locality>{$depiction[1]/dwc_locality/text()}</dwc:locality>,
-                             <dwc:georeferenceRemarks>{$orgRecord/dwc_georeferenceRemarks/text()}</dwc:georeferenceRemarks>,
-                             <dwc:continent>{$depiction[1]/dwc_continent/text()}</dwc:continent>,
-                             <dwc:countryCode>{$depiction[1]/dwc_countryCode/text()}</dwc:countryCode>,
-                             <dwc:stateProvince>{$depiction[1]/dwc_stateProvince/text()}</dwc:stateProvince>,
-                             <dwc:county>{$depiction[1]/dwc_county/text()}</dwc:county>,
-                             if ($depiction[1]/dwc_informationWithheld/text() != "")
-                             then <dwc:informationWithheld>{$depiction[1]/dwc_informationWithheld/text()}</dwc:informationWithheld>
-                             else (),
-                             if ($depiction[1]/dwc_dataGeneralizations/text() != "")
-                             then <dwc:dataGeneralizations>{$depiction[1]/dwc_dataGeneralizations/text()}</dwc:dataGeneralizations>
-                             else (),
-                             <dwciri:inDescribedPlace rdf:resource="{'http://sws.geonames.org/'||$depiction[1]/geonamesAdmin/text()||'/'}"/>,   
-                             if ($depiction[1]/geonamesOther/text() != "")
-                             then <dwciri:inDescribedPlace rdf:resource="{'http://sws.geonames.org/'||$depiction[1]/geonamesOther/text()||'/'}"/>
-                             else ()
-                           }</rdf:Description>
-                        </dsw:locatedAt>
-                    }</rdf:Description>
-                </dsw:atEvent>,
-                ($depiction/dcterms_identifier ! <dsw:hasEvidence rdf:resource="{.}"/>)
-              }</rdf:Description>              
-               </dsw:hasOccurrence>),
-      if ($orgRecord/dwc_collectionCode/text() != "")
-      then (
-           <!-- The LivingSpecimen serves as evidence for the Occurrence documenting itself as an Organism -->,
-           <dcterms:type rdf:resource="http://rs.tdwg.org/dwc/terms/LivingSpecimen"/>,
-           <dsw:hasOccurrence>
-               <rdf:Description rdf:about='{$orgRecord/dcterms_identifier/text()||"#occ"}'>{
-               <rdf:type rdf:resource="http://rs.tdwg.org/dwc/terms/Occurrence"/>,
-               <dsw:hasEvidence rdf:resource='{$orgRecord/dcterms_identifier/text()}'/>,
-               <!-- dwc:recordedBy and the Event establishing the collection record would go here -->
-               }</rdf:Description>
-           </dsw:hasOccurrence>
-            )
-      else (),
-      <!--Identifications applied to the organism-->,
-        for $detRecord in $xmlDeterminations/csv/record,
-            $nameRecord in $xmlNames/csv/record,
-            $sensuRecord in $xmlSensu/csv/record
-        where $detRecord/dsw_identified=$orgRecord/dcterms_identifier and $nameRecord/dcterms_identifier=$detRecord/tsnID and $sensuRecord/dcterms_identifier=$detRecord/nameAccordingToID
-        return <dsw:hasIdentification><rdf:Description rdf:about="{$orgRecord/dcterms_identifier/text()||"#"||$detRecord/dwc_dateIdentified/text()||$detRecord/identifiedBy/text()}">{
-                  if ($nameRecord/dwc_taxonRank/text() = "species")
-                  then <dcterms:description xml:lang="en">Determination of {$nameRecord/dwc_genus/text()||" "||$nameRecord/dwc_specificEpithet/text()||" sec. "||$sensuRecord/tcsSignature/text()}</dcterms:description>
-                  else 
-                    if ($nameRecord/dwc_taxonRank/text() = "genus")
-                    then <dcterms:description xml:lang="en">Determination of {$nameRecord/dwc_genus/text()||" sec. "||$sensuRecord/tcsSignature/text()}</dcterms:description>
-                    else 
-                      if ($nameRecord/dwc_taxonRank/text() = "subspecies")
-                      then <dcterms:description xml:lang="en">Determination of {$nameRecord/dwc_genus/text()||" "||$nameRecord/dwc_specificEpithet/text()||" ssp. "||$nameRecord/dwc_infraspecificEpithet/text()||" sec. "||$sensuRecord/tcsSignature/text()}</dcterms:description>
-                      else
-                        if ($nameRecord/dwc_taxonRank/text() = "variety")
-                        then <dcterms:description xml:lang="en">Determination of {$nameRecord/dwc_genus/text()||" "||$nameRecord/dwc_specificEpithet/text()||" var. "||$nameRecord/dwc_infraspecificEpithet/text()||" sec. "||$sensuRecord/tcsSignature/text()}</dcterms:description>
-                        else ()
-                  ,
-                  <rdf:type rdf:resource ="http://rs.tdwg.org/dwc/terms/Identification" />,
-                  if ($detRecord/dwc_identificationRemarks/text() != "")
-                  then <dwc:identificationRemarks>{$detRecord/dwc_identificationRemarks/text()}</dwc:identificationRemarks>
-                  else (),
-                  <blocal:itisTsn>{$detRecord/tsnID/text()}</blocal:itisTsn>,
-                  <dwc:kingdom>{$nameRecord/dwc_kingdom/text()}</dwc:kingdom>,
-                  <dwc:class>{$nameRecord/dwc_class/text()}</dwc:class>,
-                  
-                  if ($nameRecord/dwc_order/text() != "")
-                  then <dwc:order>{$nameRecord/dwc_order/text()}</dwc:order>
-                  else (),
-                  
-                  if ($nameRecord/dwc_genus/text() != "")
-                  then <dwc:genus>{$nameRecord/dwc_genus/text()}</dwc:genus>
-                  else (),
-                  
-                  if ($nameRecord/dwc_specificEpithet/text() != "")
-                  then <dwc:specificEpithet>{$nameRecord/dwc_specificEpithet/text()}</dwc:specificEpithet>
-                  else (),
-                  
-                  if ($nameRecord/dwc_infraspecificEpithet/text() != "")
-                  then <dwc:infraspecificEpithet>{$nameRecord/dwc_infraspecificEpithet/text()}</dwc:infraspecificEpithet>
-                  else (),
-                  
-                  <dwc:taxonRank>{$nameRecord/dwc_taxonRank/text()}</dwc:taxonRank>,
-                  <dwc:vernacularName xml:lang="en">{$nameRecord/dwc_vernacularName/text()}</dwc:vernacularName>,
-                  <dwc:scientificNameAuthorship>{$nameRecord/dwc_scientificNameAuthorship/text()}</dwc:scientificNameAuthorship>,
-                  <dwc:scientificName>{$nameRecord/dwc_genus/text()||" "||$nameRecord/dwc_specificEpithet/text()}</dwc:scientificName>,
-                  <dwc:nameAccordingTo>{$sensuRecord/dc_creator/text()||", "||$sensuRecord/dcterms_created/text()||". "||$sensuRecord/dc_publisher/text()||"."}</dwc:nameAccordingTo>,
-                  <blocal:secundumSignature>{$sensuRecord/tcsSignature/text()}</blocal:secundumSignature>,
-                  <dwciri:toTaxon><dwc:Taxon>
-                       <tc:accordingTo rdf:resource="{$sensuRecord/iri/text()}" />
-                       <tc:hasName rdf:resource="urn:lsid:ubio.org:namebank:{$nameRecord/ubioID/text()}"/>
-                  </dwc:Taxon></dwciri:toTaxon>,
-                  if (string-length($detRecord/dwc_dateIdentified/text()) = 10)
-                  then (<dwc:dateIdentified rdf:datatype="http://www.w3.org/2001/XMLSchema#date">{$detRecord/dwc_dateIdentified/text()}</dwc:dateIdentified>)
-                  else (
-                       if (string-length($detRecord/dwc_dateIdentified/text()) = 4)
-                       then (<dwc:dateIdentified rdf:datatype="http://www.w3.org/2001/XMLSchema#gYear">{$detRecord/dwc_dateIdentified/text()}</dwc:dateIdentified>)
-                       else (<dwc:dateIdentified>{$detRecord/dwc_dateIdentified/text()}</dwc:dateIdentified>)
-                       ),
-                  for $agentRecord in $xmlAgents/csv/record
-                  where $agentRecord/dcterms_identifier=$detRecord/identifiedBy
-                  return (
-                         <dwc:identifiedBy>{$agentRecord/dc_contributor/text()}</dwc:identifiedBy>,
-                         <dwciri:identifiedBy rdf:resource ="{$agentRecord/iri/text()}"/>
-                         )
-              }</rdf:Description></dsw:hasIdentification>,
-              
-              for $linkRecord in $xmlLinks/csv/record
-              where $linkRecord/subjectIRI/text()=$orgRecord/dcterms_identifier/text()
-              return (
-                     element {$linkRecord/property/text()} 
-                         {
-                         <rdf:Description rdf:about="{$linkRecord/objectIRI/text()}">
-                           <rdf:type rdf:resource="{$linkRecord/objectType/text()}"/>
-                           <dcterms:description xml:lang="en">{$linkRecord/objectDescription/text()}</dcterms:description>
-                         </rdf:Description>
-                         }
-                     )
-              
-              
-      }</rdf:Description>
-       <rdf:Description rdf:about="{$orgRecord/dcterms_identifier/text()||".rdf"}">{
-            <rdf:type rdf:resource ="http://xmlns.com/foaf/0.1/Document" />,
-            <dc:format>application/rdf+xml</dc:format>,
-            <dcterms:identifier>{$orgRecord/dcterms_identifier/text()||".rdf"}</dcterms:identifier>,
-            <dcterms:description xml:lang="en">RDF formatted description of the organism {$orgRecord/dcterms_identifier/text()}</dcterms:description>,
-            <dc:creator>bioimages.vanderbilt.edu</dc:creator>,
-            <dcterms:creator rdf:resource="http://biocol.org/urn:lsid:biocol.org:col:35115"/>,
-            <dc:language>en</dc:language>,
-            <dcterms:language rdf:resource="http://id.loc.gov/vocabulary/iso639-2/eng"/>,
-            <dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">{fn:current-dateTime()}</dcterms:modified>,
-            <dcterms:references rdf:resource="{$orgRecord/dcterms_identifier/text()}"/>,
-            <foaf:primaryTopic rdf:resource="{$orgRecord/dcterms_identifier/text()}"/>
-       }</rdf:Description>
-  </body>
-</html>
+    }</div>
+  }</body>
+}</html>
        )),
 let $localFilesFolderPC := "c:\test"
 let $lastPublished := fn:current-dateTime()
