@@ -242,7 +242,7 @@ document.getElementById('orgimage').innerHTML='<img alt="||$tempQuoted1||"../lq/
       <h5><em>This particular individual is believed to be </em><strong>{$orgRecord/dwc_establishmentMeans/text()}</strong>.</h5>,
       <br/>,
       <br/>,
-
+(: Here is the beginning of multiple determinations:)
       <h3><strong>Identifications:</strong></h3>,
       <br/>,
       <h2><em>Quercus velutina</em></h2>,
