@@ -275,12 +275,93 @@ document.getElementById('orgimage').innerHTML='<img alt="||$tempQuoted1||"../lq/
           <em>Identified </em>,
           <span>{$detRecord/dwc_dateIdentified/text()}</span>,
           <em> by </em>,
-          <a href="{$agentRecord/contactURL/text()}">{$agentRecord/dc_contributor/text()}</a>
+          for $agentRecord in $xmlAgents/csv/record
+          where $agentRecord/dcterms_identifier=$detRecord/identifiedBy
+          return <a href="{$agentRecord/contactURL/text()}">{$agentRecord/dc_contributor/text()}</a>
         }</h6>,
         <br/>,
         <br/>
-      )
-    }</div>
+      ),
+      
+      <h3><strong>Location:</strong></h3>,
+      <br/>,
+      
+      for $depiction in $xmlImages/csv/record
+      where $depiction/foaf_depicts=$orgRecord/dcterms_identifier
+      let $organismID := $orgRecord/dcterms_identifier
+      group by $organismID
+      return (            
+        <span>{$depiction[1]/dwc_locality/text()}, {$depiction[1]/dwc_county/text()}, {$depiction[1]/dwc_stateProvince/text()}, {$depiction[1]/dwc_countryCode/text()}</span>,
+        <br/>,
+        <span>Click on these geocoordinates to load a map showing the location: </span>,
+        <a target="top" href="http://maps.google.com/maps?output=classic&amp;q=loc:36.14655,-86.80221&amp;t=h&amp;z=16">36.14655&#176;, -86.80221&#176;</a>,
+        <br/>,
+        <span>Coordinate uncertainty about:  10  m</span>,
+        <br/>,
+        <img src="http://maps.googleapis.com/maps/api/staticmap?center={$orgRecord/dwc_decimalLatitude/text()},{$orgRecord/dwc_decimalLongitude/text()}&amp;zoom=14&amp;size=300x300&amp;markers=color:green%7C{$orgRecord/dwc_decimalLatitude/text()},{$orgRecord/dwc_decimalLongitude/text()}&amp;sensor=false"/>,
+        <img src="http://maps.googleapis.com/maps/api/staticmap?center={$orgRecord/dwc_decimalLatitude/text()},{$orgRecord/dwc_decimalLongitude/text()}&amp;maptype=hybrid&amp;zoom=18&amp;size=300x300&amp;markers=color:green%7C{$orgRecord/dwc_decimalLatitude/text()},{$orgRecord/dwc_decimalLongitude/text()}&amp;sensor=false"/>,
+        <br/>,
+        <br/>
+      ),
+      
+      <strong>Occurrences were recorded for this individual on the following dates:</strong>,
+      <br/>,
+      for $depiction in $xmlImages/csv/record
+      where $depiction/foaf_depicts=$orgRecord/dcterms_identifier
+      let $occurrenceDate := substring($depiction/dcterms_created/text(),1,10)
+      group by $occurrenceDate
+      return (
+        <a id="{$occurrenceDate}">{$occurrenceDate}</a>,
+        <br/>
+        ),
+        <br/>,
+        
+      <strong>The following images document this individual.</strong>,
+      <br/>,
+      <span> Click on the link to view the image and its metadata.</span>,
+      <a href="#" onclick='window.location.replace("../metadata.htm?{$namespace}/{$fileName}/metadata/ind");'>View sorted thumbnails and enable site navigation.</a>,
+      <br/>,
+      <br/>,
+      <table border="1" cellspacing="0">{
+        <tr><td>Image identifier</td><td>View</td></tr>,
+        for $depiction in $xmlImages/csv/record
+        where $depiction/foaf_depicts=$orgRecord/dcterms_identifier
+        return (
+                <tr>{
+                  <td>{
+                    <a href="{$depiction/dcterms_identifier/text()}.htm">{$depiction/dcterms_identifier/text()}</a>
+                  }</td>,
+                  <td>{$depiction/view/text()}</td>
+                }</tr>
+               )
+      }</table>,
+      <br/>,
+      (: TODO: pull these values from the sensu file, or save earlier :)
+      <h6>fna.org 1993 =</h6>,
+      <br/>,
+      <h6>Flora of North America Editorial Committee, eds., 1993. Flora of North America North of Mexico. Flora of North America Association, New York, NY, US and Oxford, UK. </h6>,
+      <br/>,
+      <br/>,
+      <h5>{
+        <em>Metadata last modified: </em>,
+        <span>{fn:current-dateTime()}</span>,
+        <br/>,
+        <a target="top" href="http://bioimages.vanderbilt.edu/vanderbilt/7-313.rdf">RDF formatted metadata for this individual</a>,
+        <br/>
+      }</h5>
+    }</div>,
+    <script type="text/javascript">{'
+    document.getElementById("paste").setAttribute("class", browser); // set css for browser type
+    '}</script>,
+    <script type="text/javascript">{"
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    
+      ga('create', 'UA-45642729-1', 'vanderbilt.edu');
+      ga('send', 'pageview');
+    "}</script>
   }</body>
 }</html>
        )),
