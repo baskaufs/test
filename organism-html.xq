@@ -242,23 +242,44 @@ document.getElementById('orgimage').innerHTML='<img alt="||$tempQuoted1||"../lq/
       <h5><em>This particular individual is believed to be </em><strong>{$orgRecord/dwc_establishmentMeans/text()}</strong>.</h5>,
       <br/>,
       <br/>,
-(: Here is the beginning of multiple determinations:)
       <h3><strong>Identifications:</strong></h3>,
       <br/>,
-      <h2><em>Quercus velutina</em></h2>,
-      <span> </span>,
-      <h3>Lam.</h3>,
-      <h6>sec. fna.org 1993</h6>,
-      <br/>,
-
-      <span>common name: black oak</span>,
-      <br/>,
-      <span>family: Fagaceae</span>,
-      <br/>,
-      <h6><em>Identified </em>2002-06-25<em> by </em> <a href="http://bioimages.vanderbilt.edu/contact/baskauf">Steven J. Baskauf</a></h6>,
-      <br/>,
-      <br/>
-    
+      for $detRecord in $xmlDeterminations/csv/record,
+          $nameRecord in $xmlNames/csv/record,
+          $sensuRecord in $xmlSensu/csv/record
+      where $detRecord/dsw_identified=$orgRecord/dcterms_identifier and $nameRecord/dcterms_identifier=$detRecord/tsnID and $sensuRecord/dcterms_identifier=$detRecord/nameAccordingToID
+      return (
+      <h2>{
+      if ($nameRecord/dwc_taxonRank/text() = "species")
+             then (<em>{$nameRecord/dwc_genus/text()||" "||$nameRecord/dwc_specificEpithet/text()}</em>," ("||$nameRecord/dwc_vernacularName/text()||")")
+             else 
+               if ($nameRecord[1]/dwc_taxonRank/text() = "genus")
+               then (<em>{$nameRecord/dwc_genus/text()}</em>," ("||$nameRecord/dwc_vernacularName/text(),")")
+               else 
+                 if ($nameRecord/dwc_taxonRank/text() = "subspecies")
+                 then (<em>{$nameRecord/dwc_genus/text()||" "||$nameRecord/dwc_specificEpithet/text()}</em>," ssp. ",<em>{$nameRecord/dwc_infraspecificEpithet/text()}</em>, " (", $nameRecord/dwc_vernacularName/text(),")")
+                 else
+                   if ($nameRecord/dwc_taxonRank/text() = "variety")
+                   then (<em>{$nameRecord/dwc_genus/text()||" "||$nameRecord/dwc_specificEpithet/text()}</em>," var. ",<em>{$nameRecord/dwc_infraspecificEpithet/text()}</em>, " (", $nameRecord/dwc_vernacularName/text(),")")
+                   else ()
+        }</h2>,
+        <span> </span>,
+        <h3>{$nameRecord/dwc_scientificNameAuthorship/text()}</h3>,
+        <h6>sec. {$sensuRecord/tcsSignature/text()}</h6>,
+        <br/>,
+        <span>common name: {$nameRecord/dwc_vernacularName/text()}</span>,
+        <br/>,
+        <span>family: {$nameRecord/dwc_family/text()}</span>,
+        <br/>,
+        <h6>{
+          <em>Identified </em>,
+          <span>{$detRecord/dwc_dateIdentified/text()}</span>,
+          <em> by </em>,
+          <a href="{$agentRecord/contactURL/text()}">{$agentRecord/dc_contributor/text()}</a>
+        }</h6>,
+        <br/>,
+        <br/>
+      )
     }</div>
   }</body>
 }</html>
