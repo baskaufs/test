@@ -208,6 +208,16 @@ document.getElementById('orgimage').innerHTML='<img alt="||$tempQuoted1||"../lq/
       <h5><strong property="dcterms:identifier">{$orgRecord/dcterms_identifier/text()}</strong></h5>,
       <br/>,
       <br/>,
+      
+      if ($orgRecord/notes/text() != "")
+      then (
+            <h3><strong>Notes:</strong></h3>,
+            <br/>,
+            $orgRecord/notes/text(),
+            <br/>
+           )
+      else (),
+      
       <table>
         <tr>
           <td><a href="../index.htm"><img alt="home button" src="../logo.jpg" height="88" /></a></td>
@@ -336,17 +346,23 @@ document.getElementById('orgimage').innerHTML='<img alt="||$tempQuoted1||"../lq/
                )
       }</table>,
       <br/>,
-      (: TODO: pull these values from the sensu file, or save earlier :)
-      <h6>fna.org 1993 =</h6>,
+
+      for $detRecord in $xmlDeterminations/csv/record, $sensuRecord in $xmlSensu/csv/record
+      where $detRecord/dsw_identified=$orgRecord/dcterms_identifier and $sensuRecord/dcterms_identifier=$detRecord/nameAccordingToID
+      let $sensuScreen := $sensuRecord/dcterms_identifier/text()
+      group by $sensuScreen
+      return (
+      <h6>{$sensuRecord/tcsSignature/text()} =</h6>,
       <br/>,
-      <h6>Flora of North America Editorial Committee, eds., 1993. Flora of North America North of Mexico. Flora of North America Association, New York, NY, US and Oxford, UK. </h6>,
-      <br/>,
+      <h6>{$sensuRecord/dc_creator/text()}, {$sensuRecord/dcterms_created/text()}. {$sensuRecord/dcterms_title/text()}. {$sensuRecord/dc_publisher/text()}. </h6>,
+      <br/>
+          ),
       <br/>,
       <h5>{
         <em>Metadata last modified: </em>,
         <span>{fn:current-dateTime()}</span>,
         <br/>,
-        <a target="top" href="http://bioimages.vanderbilt.edu/vanderbilt/7-313.rdf">RDF formatted metadata for this individual</a>,
+        <a target="top" href="{$orgRecord/dcterms_identifier/text()||'.rdf'}">RDF formatted metadata for this individual</a>,
         <br/>
       }</h5>
     }</div>,
