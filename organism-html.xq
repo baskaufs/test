@@ -105,6 +105,9 @@ let $xmlImages := csv:parse($textImages, map { 'header' : true() })
 let $textAgents := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/agents-small.csv'/>)[2]
 let $xmlAgents := csv:parse($textAgents, map { 'header' : true() })
 
+let $textTourButtons := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/tour-buttons.csv'/>)[2]
+let $xmlTourButtons := csv:parse($textTourButtons, map { 'header' : true() })
+
 let $textLinks := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/links.csv'/>)[2]
 let $xmlLinks := csv:parse($textLinks, map { 'header' : true() })
 
@@ -162,49 +165,59 @@ return (file:create-dir(concat($rootPath,"\",$namespace)), file:write($filePath,
       <span property="about" resource="{$orgRecord/dcterms_identifier/text()}"></span>
       <span property="dateModified" content="{fn:current-dateTime()}"></span>
     </div>,
-    (: !!!!!!!!!!! TODO: need to implement buttons here !!!!!!!!!!!!!! :)
+
     <div id="paste" resource="{$orgRecord/dcterms_identifier/text()}" typeof="dcterms:PhysicalResource">{
-      <table>
-        <tr>
+      
+      if ($xmlTourButtons/csv/record[organism_iri=$orgRecord/dcterms_identifier/text()])
+      then (
+      <table>{
+
+      for $buttonSet in $xmlTourButtons/csv/record
+      where $buttonSet/organism_iri=$orgRecord/dcterms_identifier
+      return (
+        <tr>{
+          if ($buttonSet/previous_iri/text() != "")
+          then (
+                <td>{
+                  <a href="{$buttonSet/previous_iri/text()}">
+                    <img alt="previous button" src="{$buttonSet/previous_button_image/text()}" height="58" />
+                  </a>
+                }</td>
+               )
+          else (),
           <td>
-            <a href="../vanderbilt/12-126.htm">
-              <img alt="previous button" src="../buttons/peabody-last.png" height="58" />
+            <a href="{$buttonSet/home_iri/text()}">
+              <img alt="tour home button" src="{$buttonSet/home_button_image/text()}" height="58" />
             </a>
-          </td>
+          </td>,
           <td>
-            <a href="http://vanderbilt.edu/trees/">
-              <img alt="tour home button" src="../contact/vanderbilt-logo.png" height="58" />
+            <a href="{$buttonSet/tour_iri/text()}">
+              <img alt="tour page button" src="{$buttonSet/tour_button_image/text()}" height="58" />
             </a>
-          </td>
-          <td>
-            <a href="http://vanderbilt.edu/trees/tours/main-campus">
-              <img alt="tour page button" src="../buttons/main-tour.png" height="58" />
-            </a>
-          </td>
-          <td>
-            <a href="../vanderbilt/11-23.htm"><img alt="next button" src="../buttons/main-next.png" height="58" /></a>
-          </td>
-        </tr>
-      </table>,
-      <br/>,
+          </td>,
+          if ($buttonSet/next_iri/text() != "")
+          then (
+                <td>{
+                  <a href="{$buttonSet/next_iri/text()}">
+                    <img alt="next button" src="{$buttonSet/next_button_image/text()}" height="58" />
+                  </a>
+                }</td>
+               )
+          else ()
+        }</tr>
+      )
+
+      }</table>,
+      <br/>
+        )
+      else (),
+      
       <span>An individual of {$taxonNameMarkup}</span>,
       <br/>,
-      
-      <a href="../baskauf/90694.htm"><span id="orgimage"><img alt="Image of organism" title="Image of organism" src="../lq/baskauf/w90694.jpg" /></span></a>,
-      <br/>,
-(: TODO: This is escaping the lt and gt in the javascript :)      
-      <script type="text/javascript">{"
-if (document.documentElement.clientWidth<400)
-     {
-imgHeight=document.documentElement.clientHeight-100;
-if (imgHeight>480)
-          {
-          imgHeight=480;
-          }
-document.getElementById('orgimage').innerHTML='<img alt="||$tempQuoted1||"../lq/baskauf/w90694.jpg"||$tempQuoted2||"'+imgHeight+'"||$tempQuoted3||"';
-     }
-"}
-      </script>,
+
+(: TODO: fix this so that the correct cameo is displayed :)      
+      <a href="../{$namespace}/{$fileName}.htm"><span id="orgimage"><img alt="Image of organism" title="Image of organism" src="../lq/{$namespace}/w{$fileName}.jpg" /></span></a>,
+      <br/>,    
 
       <h5>Permanent identifier for the individual:</h5>,
       <br/>,
@@ -229,7 +242,7 @@ document.getElementById('orgimage').innerHTML='<img alt="||$tempQuoted1||"../lq/
         </tr>
       </table>,
       <br/>,
-(: TODO: it's also escaping the quotes here :)
+(: It doesn't seem to be a problem that the quotes in the onclick value get escaped :)
       <h5><a href="#" onclick='{$loadDatabaseString}'>&#8239;Load database and switch to thumbnail view</a>
       </h5>,
       <br/>,
@@ -254,6 +267,25 @@ document.getElementById('orgimage').innerHTML='<img alt="||$tempQuoted1||"../lq/
 
       <h5><em>This particular individual is believed to be </em><strong>{$orgRecord/dwc_establishmentMeans/text()}</strong>.</h5>,
       <br/>,
+
+      if ($orgRecord/dwc_organismName/text() != "")
+      then (
+            <h5><em>It has the name </em>&quot;<strong>{$orgRecord/dwc_organismName/text()}</strong>&quot;.</h5>,<br/>
+           )
+      else (),
+
+      if ($orgRecord/dwc_organismScope/text() != "multicellular organism")
+      then (
+            <h5><em>This entity has the scope: </em><strong>{$orgRecord/dwc_organismScope/text()}</strong>.</h5>,<br/>
+           )
+      else (),
+
+      if ($orgRecord/dwc_organismRemarks/text() != "")
+      then (
+            <h5><em>Remarks:</em><strong>{$orgRecord/dwc_organismRemarks/text()}</strong></h5>,<br/>
+           )
+      else (),
+
       <br/>,
       <h3><strong>Identifications:</strong></h3>,
       <br/>,
@@ -307,10 +339,17 @@ document.getElementById('orgimage').innerHTML='<img alt="||$tempQuoted1||"../lq/
         <span>{$depiction[1]/dwc_locality/text()}, {$depiction[1]/dwc_county/text()}, {$depiction[1]/dwc_stateProvince/text()}, {$depiction[1]/dwc_countryCode/text()}</span>,
         <br/>,
         <span>Click on these geocoordinates to load a map showing the location: </span>,
-        <a target="top" href="http://maps.google.com/maps?output=classic&amp;q=loc:36.14655,-86.80221&amp;t=h&amp;z=16">36.14655&#176;, -86.80221&#176;</a>,
+        <a target="top" href="http://maps.google.com/maps?output=classic&amp;q=loc:{$orgRecord/dwc_decimalLatitude/text()},{$orgRecord/dwc_decimalLongitude/text()}&amp;t=h&amp;z=16">{$orgRecord/dwc_decimalLatitude/text()}&#176;, {$orgRecord/dwc_decimalLongitude/text()}&#176;</a>,
         <br/>,
-        <span>Coordinate uncertainty about:  10  m</span>,
+        <h6>Coordinate uncertainty about:  {$depiction[1]/dwc_coordinateUncertaintyInMeters/text()}  m.  </h6>,
+        if ($orgRecord/geo_alt/text() != "-9999")
+        then (
+              <h6>Altitude: {$orgRecord/geo_alt/text()}.  </h6>
+             )
+        else (),
         <br/>,
+        <h6>{$orgRecord/dwc_georeferenceRemarks/text()}</h6>,
+        <br/>,        
         <img src="http://maps.googleapis.com/maps/api/staticmap?center={$orgRecord/dwc_decimalLatitude/text()},{$orgRecord/dwc_decimalLongitude/text()}&amp;zoom=14&amp;size=300x300&amp;markers=color:green%7C{$orgRecord/dwc_decimalLatitude/text()},{$orgRecord/dwc_decimalLongitude/text()}&amp;sensor=false"/>,
         <img src="http://maps.googleapis.com/maps/api/staticmap?center={$orgRecord/dwc_decimalLatitude/text()},{$orgRecord/dwc_decimalLongitude/text()}&amp;maptype=hybrid&amp;zoom=18&amp;size=300x300&amp;markers=color:green%7C{$orgRecord/dwc_decimalLatitude/text()},{$orgRecord/dwc_decimalLongitude/text()}&amp;sensor=false"/>,
         <br/>,
