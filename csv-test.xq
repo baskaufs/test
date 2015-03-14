@@ -220,6 +220,10 @@ xmlns:blocal="http://bioimages.vanderbilt.edu/rdf/local#"
                   then <dwc:order>{$nameRecord/dwc_order/text()}</dwc:order>
                   else (),
                   
+                  if ($nameRecord/dwc_family/text() != "")
+                  then <dwc:family>{$nameRecord/dwc_family/text()}</dwc:family>
+                  else (),
+                  
                   if ($nameRecord/dwc_genus/text() != "")
                   then <dwc:genus>{$nameRecord/dwc_genus/text()}</dwc:genus>
                   else (),
