@@ -114,6 +114,9 @@ let $lastPublished := $lastPublishedDoc/body/dcterms:modified/text()
 let $organismsToWriteDoc := file:read-text(concat('file:///',$localFilesFolderUnix,'/organisms-to-write.txt'))
 let $xmlOrganismsToWrite := csv:parse($organismsToWriteDoc, map { 'header' : false() })
 
+let $stdViewDoc := fn:doc('https://raw.githubusercontent.com/baskaufs/Bioimages/master/stdview.xml')
+let $viewCategory := $stdViewDoc/view/viewGroup/viewCategory
+
 for $orgRecord in $xmlOrganisms/csv/record, $organismsToWrite in distinct-values($xmlOrganismsToWrite/csv/record/entry)
 where $orgRecord/dcterms_identifier/text() = $organismsToWrite
 let $taxonNameClean := local:get-taxon-name-clean($xmlDeterminations/csv/record,$xmlNames/csv/record,$xmlSensu/csv/record,$orgRecord/dcterms_identifier/text() )
@@ -334,14 +337,15 @@ document.getElementById('orgimage').innerHTML='<img alt="||$tempQuoted1||"../lq/
       <br/>,
       <table border="1" cellspacing="0">{
         <tr><td>Image identifier</td><td>View</td></tr>,
-        for $depiction in $xmlImages/csv/record
-        where $depiction/foaf_depicts=$orgRecord/dcterms_identifier
+        for $depiction in $xmlImages/csv/record, $viewCat in $viewCategory
+        where $depiction/foaf_depicts=$orgRecord/dcterms_identifier and $viewCat/stdview/@id = substring($depiction/view/text(),2)
+        order by substring($depiction/view/text(),2)
         return (
                 <tr>{
                   <td>{
                     <a href="{$depiction/dcterms_identifier/text()}.htm">{$depiction/dcterms_identifier/text()}</a>
                   }</td>,
-                  <td>{$depiction/view/text()}</td>
+                  <td>{data($viewCat/@name)||" - "||data($viewCat/stdview[@id=substring($depiction/view/text(),2)]/@name)}</td>
                 }</tr>
                )
       }</table>,
