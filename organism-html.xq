@@ -125,12 +125,15 @@ where $orgRecord/dcterms_identifier/text() = $organismsToWrite
 let $taxonNameClean := local:get-taxon-name-clean($xmlDeterminations/csv/record,$xmlNames/csv/record,$xmlSensu/csv/record,$orgRecord/dcterms_identifier/text() )
 let $taxonNameMarkup := local:get-taxon-name-markup($xmlDeterminations/csv/record,$xmlNames/csv/record,$xmlSensu/csv/record,$orgRecord/dcterms_identifier/text() )
 let $fileName := local:substring-after-last($orgRecord/dcterms_identifier/text(),"/")
-let $temp := substring-before($orgRecord/dcterms_identifier/text(),concat("/",$fileName))
-let $namespace := local:substring-after-last($temp,"/")
+let $temp1 := substring-before($orgRecord/dcterms_identifier/text(),concat("/",$fileName))
+let $namespace := local:substring-after-last($temp1,"/")
 let $filePath := concat($rootPath,"\", $namespace,"\", $fileName,".htm")
 let $tempQuoted1 := '"Image of organism" title="Image of organism" src="'
 let $tempQuoted2 := '" height="'
 let $tempQuoted3 := '"/>'
+let $cameoFileName := local:substring-after-last($orgRecord/cameo/text(),"/")
+let $temp2 := substring-before($orgRecord/cameo/text(),concat("/",$cameoFileName))
+let $cameoNamespace := local:substring-after-last($temp2,"/")
 let $googleMapString := "http://maps.google.com/maps?output=classic&amp;q=loc:"||$orgRecord/dwc_decimalLatitude/text()||","||$orgRecord/dwc_decimalLongitude/text()||"&amp;t=h&amp;z=16"
 let $qrCodeString := "http://chart.apis.google.com/chart?chs=100x100&amp;cht=qr&amp;chld=|1&amp;chl=http%3A%2F%2Fbioimages.vanderbilt.edu%2F"||$namespace||"%2F"||$fileName||".htm"
 let $loadDatabaseString := 'window.location.replace("../metadata.htm?'||$namespace||'/'||$fileName||'/metadata/ind");'
@@ -215,8 +218,7 @@ return (file:create-dir(concat($rootPath,"\",$namespace)), file:write($filePath,
       <span>An individual of {$taxonNameMarkup}</span>,
       <br/>,
 
-(: TODO: fix this so that the correct cameo is displayed :)      
-      <a href="../{$namespace}/{$fileName}.htm"><span id="orgimage"><img alt="Image of organism" title="Image of organism" src="../lq/{$namespace}/w{$fileName}.jpg" /></span></a>,
+      <a href="../{$cameoNamespace}/{$cameoFileName}.htm"><span id="orgimage"><img alt="Image of organism" title="Image of organism" src="../lq/{$cameoNamespace}/w{$cameoFileName}.jpg" /></span></a>,
       <br/>,    
 
       <h5>Permanent identifier for the individual:</h5>,
