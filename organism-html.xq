@@ -231,7 +231,7 @@ return (file:create-dir(concat($rootPath,"\",$namespace)), file:write($filePath,
       then (
             <h3><strong>Notes:</strong></h3>,
             <br/>,
-            fn:doc(replace($orgRecord/notes/text(),"&gt;",">" )),
+            fn:parse-xml($orgRecord/notes/text()),
             <br/>
            )
       else (),
