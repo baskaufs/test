@@ -2,12 +2,26 @@ xquery version "3.0";
 declare namespace rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 declare namespace dc="http://purl.org/dc/elements/1.1/";
 declare namespace dcterms="http://purl.org/dc/terms/";
-(: 
-TODO: fix county/parish/borough unit 
+(:
+TODO: fix broken JavaScript for resizing image
 :)
 (:
 *********** Functions *********
 :)
+declare function local:county-units
+($state as xs:string, $countryCode as xs:string) as xs:string
+{
+if ($countryCode = "US" or $countryCode = "CA")
+then 
+  if ($state = "Louisiana")
+  then " Parish"
+  else if ($state="Alaska")
+        then " Borough"
+        else " County"
+else
+  ""
+};
+
 declare function local:head-content
 ($title as xs:string)
 {
@@ -98,8 +112,8 @@ declare function local:location-info
 <h5><em>Location information for the occurrence documented by this image:</em></h5>,
 <br/>,
 <span property="contentLocation" resource="{$record/dcterms_identifier/text()}#loc" typeof="dcterms:Location Place">
-{$record/dwc_locality/text()}, {$record/dwc_county/text()} County, 
-{$record/dwc_state/text()}, {$record/dwc_countryCode/text()}<br/>
+{$record/dwc_locality/text()}, {$record/dwc_county/text()}{local:county-units($record/dwc_stateProvince/text(), $record/dwc_countryCode/text() )}, 
+{$record/dwc_stateProvince/text()}, {$record/dwc_countryCode/text()}<br/>
 <a property="geo" typeof="GeoCoordinates" target="top" href="http://maps.google.com/maps?output=classic&amp;q=loc:{$record/dwc_decimalLatitude/text()},{$record/dwc_decimalLongitude/text()}&amp;t=h&amp;z=16">
 <span property="latitude">{$record/dwc_decimalLatitude/text()}</span>&#176; latitude,<span property="longitude">{$record/dwc_decimalLongitude/text()}</span>&#176; longitude</a>
 </span>,
