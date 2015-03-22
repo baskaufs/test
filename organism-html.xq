@@ -295,12 +295,13 @@ return (file:create-dir(concat($rootPath,"\",$namespace)), file:write($filePath,
           $nameRecord in $xmlNames/csv/record,
           $sensuRecord in $xmlSensu/csv/record
       where $detRecord/dsw_identified=$orgRecord/dcterms_identifier and $nameRecord/dcterms_identifier=$detRecord/tsnID and $sensuRecord/dcterms_identifier=$detRecord/nameAccordingToID
+      order by $detRecord/dwc_dateIdentified/text() descending
       return (
       <h2>{
       if ($nameRecord/dwc_taxonRank/text() = "species")
              then (<em>{$nameRecord/dwc_genus/text()||" "||$nameRecord/dwc_specificEpithet/text()}</em>," ("||$nameRecord/dwc_vernacularName/text()||")")
              else 
-               if ($nameRecord[1]/dwc_taxonRank/text() = "genus")
+               if ($nameRecord/dwc_taxonRank/text() = "genus")
                then (<em>{$nameRecord/dwc_genus/text()}</em>," ("||$nameRecord/dwc_vernacularName/text(),")")
                else 
                  if ($nameRecord/dwc_taxonRank/text() = "subspecies")
