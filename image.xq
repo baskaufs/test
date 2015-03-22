@@ -2,6 +2,9 @@ xquery version "3.0";
 declare namespace rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 declare namespace dc="http://purl.org/dc/elements/1.1/";
 declare namespace dcterms="http://purl.org/dc/terms/";
+declare namespace dwc="http://rs.tdwg.org/dwc/terms/";
+declare namespace xmp="http://ns.adobe.com/xap/1.0/";
+declare namespace ac="http://rs.tdwg.org/ac/terms/";
 (:
 TODO: fix broken JavaScript for resizing image
 :)
@@ -208,6 +211,28 @@ declare function local:google-analytics-ping
 "}</script>
 };
 
+declare function local:rdf-basic-information
+($id as xs:string, $ns as xs:string, $img as xs:string, $record, $xmlAge)
+{
+<rdf:type rdf:resource ="http://purl.org/dc/dcmitype/StillImage" />,
+<dc:type>StillImage</dc:type>,
+<dcterms:type rdf:resource ="http://purl.org/dc/dcmitype/StillImage" />,
+<dcterms:identifier>{$id}</dcterms:identifier>,
+<xmp:MetadataDate rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">{$record/dcterms_modified/text()}</xmp:MetadataDate>,
+
+for $agent in $xmlAge/csv/record
+where $agent/dcterms_identifier=$record/photographerCode
+return (
+<dc:creator>{$agent/dc_contributor/text()}</dc:creator>,
+<dcterms:creator rdf:resource="{$agent/iri/text()}"/>
+    ),
+    
+<dcterms:created>{$record/dcterms_created/text()}</dcterms:created>,
+<ac:providerLiteral>Bioimages http://bioimages.vanderbilt.edu/</ac:providerLiteral>,
+<ac:provider rdf:resource="http://biocol.org/urn:lsid:biocol.org:col:35115"/>,
+<dwc:collectionCode>{$ns}</dwc:collectionCode>,
+<dwc:catalogNumber>{$img}</dwc:catalogNumber>
+};
 
 (:
 *********** Get data from GitHub *********
@@ -245,7 +270,7 @@ let $licenseCategory := $licenseDoc/license/category
 (:
 *********** Main Query *********
 :)
-let $contentType := "text/html"
+let $contentType := "text/htm"
 let $namespace := "thomas"
 let $domain := "http://bioimages.vanderbilt.edu"
 let $image := "0140-01-01"
@@ -283,13 +308,22 @@ return
        </html>)
        
   else <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+xmlns:dc="http://purl.org/dc/elements/1.1/"
+xmlns:dcterms="http://purl.org/dc/terms/"
+xmlns:dwc="http://rs.tdwg.org/dwc/terms/"
+xmlns:dwciri="http://rs.tdwg.org/dwc/iri/"
+xmlns:ac="http://rs.tdwg.org/ac/terms/"
+xmlns:dsw="http://purl.org/dsw/"
+xmlns:xmp="http://ns.adobe.com/xap/1.0/"
+xmlns:foaf="http://xmlns.com/foaf/0.1/"
+xmlns:tc="http://rs.tdwg.org/ontology/voc/TaxonConcept#"
+xmlns:txn="http://lod.taxonconcept.org/ontology/txn.owl#"
+xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#"
+xmlns:blocal="http://bioimages.vanderbilt.edu/rdf/local#"
       >
         <rdf:Description about="{$iri}">
-          <rdf:type rdf:resource ="http://purl.org/dc/dcmitype/StillImage" />
-          <dc:type>StillImage</dc:type>
-          <dcterms:type rdf:resource ="http://purl.org/dc/dcmitype/StillImage" />
-          <dcterms:identifier>{$iri}</dcterms:identifier>
-
+          {local:rdf-basic-information($iri, $namespace, $image, $imageRecord, $xmlAgents)}
         </rdf:Description>
         <rdf:Description about="{$iri}.rdf">
           <rdf:type rdf:resource ="http://xmlns.com/foaf/0.1/Document" />
