@@ -1,5 +1,6 @@
 xquery version "3.0";
 declare namespace rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+declare namespace rdfs="http://www.w3.org/2000/01/rdf-schema#";
 declare namespace dc="http://purl.org/dc/elements/1.1/";
 declare namespace dcterms="http://purl.org/dc/terms/";
 declare namespace dwc="http://rs.tdwg.org/dwc/terms/";
@@ -16,8 +17,11 @@ declare namespace Iptc4xmpExt="http://iptc.org/std/Iptc4xmpExt/2008-02-29/";
 declare namespace foaf="http://xmlns.com/foaf/0.1/";
 declare namespace geo="http://www.w3.org/2003/01/geo/wgs84_pos#";
 (:
-TODO: fix broken JavaScript for resizing image
-figure out how to link to the highres image at Morphbank
+TODO: fix broken JavaScript for resizing image,
+figure out how to link to the highres image at Morphbank.\,
+is there a field for copyright date?  I thought we were going to have one?
+think about what last modified means (document generated vs. database record updated),
+Is Bioimages http://biocol.org/urn:lsid:biocol.org:col:35115 ?
 :)
 (:
 *********** Functions *********
@@ -363,9 +367,23 @@ return ($size div $imageMax)
 };
 
 declare function local:rdf-document-metadata
-()
+($id, $modified)
 {
-""
+<rdf:type rdf:resource ="http://xmlns.com/foaf/0.1/Document" />,
+<dc:format>application/rdf+xml</dc:format>,
+<dcterms:identifier>{$id}.rdf</dcterms:identifier>,
+<dcterms:description xml:lang="en">RDF formatted description of the live organism image {$id}</dcterms:description>,
+<dc:creator>Bioimages http://bioimages.vanderbilt.edu/</dc:creator>,
+<dcterms:creator rdf:resource="http://biocol.org/urn:lsid:biocol.org:col:35115"/>,
+<dc:language>en</dc:language>,
+<dcterms:language rdf:resource="http://id.loc.gov/vocabulary/languages/eng"/>,
+<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">{$modified}</dcterms:modified>,
+<rdfs:comment>Regardless of the license of the image, the metadata are licensed CC0 - No Rights Reserved</rdfs:comment>,
+<cc:license rdf:resource="http://creativecommons.org/publicdomain/zero/1.0/"/>,
+<xhv:license rdf:resource="http://creativecommons.org/publicdomain/zero/1.0/"/>,
+<dcterms:license rdf:resource="http://creativecommons.org/publicdomain/zero/1.0/"/>,
+<dcterms:references rdf:resource="{$id}"/>,
+<foaf:primaryTopic rdf:resource="{$id}"/>
 };
 
 
@@ -466,7 +484,7 @@ xmlns:foaf="http://xmlns.com/foaf/0.1/"
 xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#"
 xmlns:blocal="http://bioimages.vanderbilt.edu/rdf/local#"
       >
-        <rdf:Description about="{$iri}">
+        <rdf:Description rdf:about="{$iri}">
           {local:rdf-basic-information($iri, $namespace, $image, $imageRecord, $xmlAgents)}
           {local:rdf-intellectual-property-info($iri, $viewCategory/stdview[@id=substring($imageRecord/view/text(),2)]/text(), $imageRecord, $xmlAgents, $licenseCategory)}
           {local:rdf-relationships($iri,$imageRecord/foaf_depicts/text(),substring($imageRecord/dcterms_created/text(),1,10))}
@@ -477,10 +495,7 @@ xmlns:blocal="http://bioimages.vanderbilt.edu/rdf/local#"
         for $ap in $accessPoints
         return local:service-access-point($domain, $namespace, $image, $iri, $ap, $imageRecord/exif_PixelXDimension/text(),$imageRecord/exif_PixelYDimension/text() )
         }
-        <rdf:Description about="{$iri}.rdf">
-          <rdf:type rdf:resource ="http://xmlns.com/foaf/0.1/Document" />
-          <dc:format>application/rdf+xml</dc:format>
-          <dcterms:identifier>{$iri}.rdf</dcterms:identifier>
-          {local:rdf-document-metadata()}
+        <rdf:Description rdf:about="{$iri}.rdf">
+          {local:rdf-document-metadata($iri, $imageRecord/dcterms_modified/text())}
         </rdf:Description>
        </rdf:RDF>
