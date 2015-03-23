@@ -22,6 +22,8 @@ figure out how to link to the highres image at Morphbank.\,
 is there a field for copyright date?  I thought we were going to have one?
 think about what last modified means (document generated vs. database record updated),
 Is Bioimages http://biocol.org/urn:lsid:biocol.org:col:35115 ?
+Fix DOCTYPE and XML declarations,
+Add lastPublished file save
 :)
 (:
 *********** Functions *********
@@ -38,6 +40,14 @@ then
         else " County"
 else
   ""
+};
+
+declare function local:substring-after-last
+($string as xs:string?, $delim as xs:string) as xs:string?
+{
+  if (contains($string, $delim))
+  then local:substring-after-last(substring-after($string, $delim),$delim)
+  else $string
 };
 
 declare function local:head-content
@@ -74,10 +84,10 @@ declare function local:rdfa-page-metadata
 };
 
 declare function local:show-cameo
-($dom as xs:string, $ns as xs:string, $img as xs:string)
+($dom as xs:string, $ns as xs:string, $img as xs:string, $fileName as xs:string)
 {
 <table border="0" cellspacing="0"><tr><td><a href="../index.htm"><img alt="home button" src="../logo.jpg" width="58" /></a></td><td valign="top"><a href="#" onclick='window.location.replace("../metadata.htm?{$ns}/{$img}/metadata/img");'>&#8239;Enable image database and site navigation</a></td></tr></table>,
-<div id="replaceImage"><a property="contentUrl" href="{$dom}/gq/{$ns}/g{$img}.jpg"><img alt="Image {$dom}/gq/{$ns}/g{$img}.jpg" src="{$dom}/lq/{$ns}/w{$img}.jpg" /></a></div>,
+<div id="replaceImage"><a property="contentUrl" href="{$dom}/gq/{$ns}/g{$fileName}"><img alt="Image {$dom}/lq/{$ns}/w{$fileName}" src="{$dom}/lq/{$ns}/w{$fileName}" /></a></div>,
 <br />
 };
 
@@ -386,6 +396,18 @@ declare function local:rdf-document-metadata
 <foaf:primaryTopic rdf:resource="{$id}"/>
 };
 
+(:
+*********** Set up local folders *********
+Delete this section if serving file directly
+:)
+
+let $localFilesFolderUnix := "c:/test"
+
+(: Create root folder if it doesn't already exist. :)
+let $rootPath := "c:\test"
+(: "file:create-dir($dir as xs:string) as empty-sequence()" will create a directory or do nothing if it already exists :)
+let $nothing := file:create-dir($rootPath)
+
 
 (:
 *********** Get data from GitHub *********
@@ -423,13 +445,31 @@ let $licenseCategory := $licenseDoc/license/category
 let $stdViewDoc := fn:doc('https://raw.githubusercontent.com/baskaufs/Bioimages/master/stdview.xml')
 let $viewCategory := $stdViewDoc/view/viewGroup/viewCategory
 
+let $imagesToWriteDoc := file:read-text(concat('file:///',$localFilesFolderUnix,'/images-to-write.txt'))
+let $xmlImagesToWrite := csv:parse($imagesToWriteDoc, map { 'header' : false() })
+
+(:
+*********** set up loop to write files for new records *********
+Delete this section if serving the files directly
+:)
+
+for $imgRecord in $xmlImages/csv/record, $imagesToWrite in distinct-values($xmlImagesToWrite/csv/record/entry)
+where $imgRecord/dcterms_identifier/text() = $imagesToWrite
+let $fileName := local:substring-after-last($imgRecord/dcterms_identifier/text(),"/")
+let $temp1 := substring-before($imgRecord/dcterms_identifier/text(),concat("/",$fileName))
+let $namespace := local:substring-after-last($temp1,"/")
+
+let $contentType := "text/html"
+let $image := $fileName
+
+let $filePath := concat($rootPath,"\", $namespace,"\", $fileName,".htm")
+return (file:create-dir(concat($rootPath,"\",$namespace)), file:write($filePath,
+
 (:
 *********** Main Query *********
+If this is called directly from HTTP, the #namespace, $image, and $contentType must be provided
 :)
-let $contentType := "text/htm"
-let $namespace := "thomas"
 let $domain := "http://bioimages.vanderbilt.edu"
-let $image := "0140-01-01"
 let $iri := concat($domain,"/",$namespace,"/",$image)
 
 for $imageRecord in $xmlImages/csv/record
@@ -437,8 +477,11 @@ where $imageRecord/dcterms_identifier=$iri
 
 return 
   if ($contentType = "text/html")
-  then ('<?xml version="1.0" encoding="UTF-8"?>',
+  then (
+      (:   ******** These declarations don't work because of escaping ***********
+      '<?xml version="1.0" encoding="UTF-8"?>',
       '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML+RDFa 1.1//EN" "http://www.w3.org/MarkUp/DTD/xhtml-rdfa-2.dtd">',
+      :)
       <html>
         <head>
           {local:head-content($imageRecord/dcterms_title/text())}
@@ -446,7 +489,7 @@ return
         <body vocab="http://schema.org/" prefix="dcterms: http://purl.org/dc/terms/ foaf: http://xmlns.com/foaf/0.1/ dcmitype: http://purl.org/dc/dcmitype/ cc: http://creativecommons.org/ns#">
           {local:rdfa-page-metadata($imageRecord/dcterms_identifier/text())}
           <div id="paste" resource="{$imageRecord/dcterms_identifier/text()}" typeof="dcmitype:StillImage ImageObject">
-            {local:show-cameo($domain, $namespace, $image)}
+            {local:show-cameo($domain, $namespace, $image, $imageRecord/fileName/text())}
             {
             for $orgRecord in $xmlOrganisms/csv/record
             where $orgRecord/dcterms_identifier/text() = $imageRecord/foaf_depicts/text()
@@ -499,3 +542,5 @@ xmlns:blocal="http://bioimages.vanderbilt.edu/rdf/local#"
           {local:rdf-document-metadata($iri, $imageRecord/dcterms_modified/text())}
         </rdf:Description>
        </rdf:RDF>
+(: delete everything after this if serving files directly :)       
+       ))
