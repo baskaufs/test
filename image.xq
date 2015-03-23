@@ -4,9 +4,20 @@ declare namespace dc="http://purl.org/dc/elements/1.1/";
 declare namespace dcterms="http://purl.org/dc/terms/";
 declare namespace dwc="http://rs.tdwg.org/dwc/terms/";
 declare namespace xmp="http://ns.adobe.com/xap/1.0/";
+declare namespace xmpRights="http://ns.adobe.com/xap/1.0/rights/";
+declare namespace dsw="http://purl.org/dsw/";
 declare namespace ac="http://rs.tdwg.org/ac/terms/";
+declare namespace photoshop="http://ns.adobe.com/photoshop/1.0/";
+declare namespace cc="http://creativecommons.org/ns#";
+declare namespace xhv="http://www.w3.org/1999/xhtml/vocab#";
+declare namespace mbank="http://www.morphbank.net/schema/morphbank#";
+declare namespace exif="http://ns.adobe.com/exif/1.0/";
+declare namespace Iptc4xmpExt="http://iptc.org/std/Iptc4xmpExt/2008-02-29/";
+declare namespace foaf="http://xmlns.com/foaf/0.1/";
+declare namespace geo="http://www.w3.org/2003/01/geo/wgs84_pos#";
 (:
 TODO: fix broken JavaScript for resizing image
+figure out how to link to the highres image at Morphbank
 :)
 (:
 *********** Functions *********
@@ -234,6 +245,130 @@ return (
 <dwc:catalogNumber>{$img}</dwc:catalogNumber>
 };
 
+declare function local:rdf-intellectual-property-info
+($id as xs:string, $mbank as xs:string, $record, $xmlAge, $license)
+{
+for $agent in $xmlAge/csv/record
+where $agent/dcterms_identifier=$record/owner
+return (
+<dc:rights xml:lang="en">{$record/dc_rights/text()}</dc:rights>,
+<xmpRights:owner>{$agent/dc_contributor/text()}</xmpRights:owner>,
+<photoshop:Credit xml:lang="en">{$record/photoshop_Credit/text()}</photoshop:Credit>,
+<cc:license rdf:resource="{$license[@id=$record/usageTermsIndex/text()]/IRI/text()}"/>,
+<xhv:license rdf:resource="{$license[@id=$record/usageTermsIndex/text()]/IRI/text()}"/>,
+<dcterms:license rdf:resource="{$license[@id=$record/usageTermsIndex/text()]/IRI/text()}"/>,
+<xmpRights:UsageTerms xml:lang="en">{$license[@id=$record/usageTermsIndex/text()]/string/text()}</xmpRights:UsageTerms>,
+<xmpRights:WebStatement>{$license[@id=$record/usageTermsIndex/text()]/IRI/text()}</xmpRights:WebStatement>,
+<ac:licenseLogoURL>{$license[@id=$record/usageTermsIndex/text()]/thumb/text()}</ac:licenseLogoURL>,
+<mbank:view>{$mbank}</mbank:view>,
+<Iptc4xmpExt:CVterm rdf:resource ="http://bioimages.vanderbilt.edu/rdf/stdview{$record/view/text()}" />,
+<dcterms:title xml:lang="en">{$record/dcterms_title/text()}</dcterms:title>,
+<dcterms:description xml:lang="en">{$record/dcterms_description/text()}</dcterms:description>,
+<ac:attributionLinkURL>{$id}.htm</ac:attributionLinkURL>,
+<local:contactURL>{$agent/contactURL/text()}</local:contactURL>,
+<xmp:Rating>{$record/xmp_Rating/text()}</xmp:Rating>
+      )
+};
+
+declare function local:rdf-relationships
+($id, $organismId, $occurDate)
+{
+<foaf:isPrimaryTopicOf rdf:resource="{$id}.htm" />,
+<foaf:isPrimaryTopicOf rdf:resource="{$id}.rdf" />,
+<dsw:derivedFrom rdf:resource="{$organismId}" />,
+<foaf:depicts rdf:resource="{$organismId}" />,
+<dsw:evidenceFor rdf:resource="{$organismId}#{$occurDate}" />,
+<ac:hasServiceAccessPoint rdf:resource="{$id}#bq" />,
+<ac:hasServiceAccessPoint rdf:resource="{$id}#tn" />,
+<ac:hasServiceAccessPoint rdf:resource="{$id}#lq" />,
+<ac:hasServiceAccessPoint rdf:resource="{$id}#gq" />
+};
+
+declare function local:rdf-location
+($record)
+{
+<geo:lat>{$record/dwc_decimalLatitude/text()}</geo:lat>,
+<geo:long>{$record/dwc_decimalLongitude/text()}</geo:long>,
+if ($record/geo_alt/text())
+then <geo:alt>{$record/geo_alt/text()}</geo:alt>
+else (),
+<dwc:coordinateUncertaintyInMeters>{$record/dwc_coordinateUncertaintyInMeters/text()}</dwc:coordinateUncertaintyInMeters>,
+<dwc:locality>{$record/dwc_locality/text()}</dwc:locality>,
+<dwc:georeferenceRemarks>{$record/dwc_georeferenceRemarks/text()}</dwc:georeferenceRemarks>,
+<dwc:countryCode>{$record/dwc_countryCode/text()}</dwc:countryCode>,
+<dwc:stateProvince>{$record/dwc_stateProvince/text()}</dwc:stateProvince>,
+<dwc:county>{$record/dwc_county/text()}</dwc:county>,
+if ($record/dwc_informationWithheld/text())
+then <dwc:informationWithheld>{$record/dwc_informationWithheld/text()}</dwc:informationWithheld>
+else (),
+if ($record/dwc_dataGeneralizations/text())
+then <dwc:dataGeneralizations>{$record/dwc_dataGeneralizations/text()}</dwc:dataGeneralizations>
+else (),
+if ($record/dwc_occurrenceRemarks/text())
+then <dwc:occurrenceRemarks>{$record/dwc_occurrenceRemarks/text()}</dwc:occurrenceRemarks>
+else ()
+};
+
+declare function local:service-access-point
+($dom, $ns, $img, $id, $type, $x, $y)
+{
+<rdf:Description rdf:about="{$id}#{$type}">
+  <rdf:type rdf:resource ="http://rs.tdwg.org/ac/terms/ServiceAccessPoint" />
+{
+if ($type="bq")
+then (  
+    <ac:variantLiteral>Best Quality</ac:variantLiteral>,
+    <ac:variant rdf:resource ="http://rs.tdwg.org/ac/terms/BestQuality" />,
+    (: The next line is what needs to be fixed!  :)
+    <ac:accessURI rdf:resource ="http://www.morphbank.net/?id=829563&amp;imgType=jpeg" />,
+    <exif:PixelXDimension rdf:datatype="http://www.w3.org/2001/XMLSchema#int">{$x}</exif:PixelXDimension>,
+    <exif:PixelYDimension rdf:datatype="http://www.w3.org/2001/XMLSchema#int">{$y}</exif:PixelYDimension>
+    )
+    else if ($type="tn")
+        then (  
+            <ac:variantLiteral>Thumbnail</ac:variantLiteral>,
+            <ac:variant rdf:resource ="http://rs.tdwg.org/ac/terms/Thumbnail" />,
+            <ac:accessURI rdf:resource ="{$dom}/tn/{$ns}/t{$img}.jpg" />,
+            <exif:PixelXDimension rdf:datatype="http://www.w3.org/2001/XMLSchema#int">{round($x*local:calculate-shrink($x, $y, 100))}</exif:PixelXDimension>,
+            <exif:PixelYDimension rdf:datatype="http://www.w3.org/2001/XMLSchema#int">{round($y*local:calculate-shrink($x, $y, 100))}</exif:PixelYDimension>
+            )
+            else if ($type="lq")
+                then (  
+                    <ac:variantLiteral>Lower Quality</ac:variantLiteral>,
+                    <ac:variant rdf:resource ="http://rs.tdwg.org/ac/terms/LowerQuality" />,
+                    <ac:accessURI rdf:resource ="{$dom}/lq/{$ns}/w{$img}.jpg" />,
+                    <exif:PixelXDimension rdf:datatype="http://www.w3.org/2001/XMLSchema#int">{round($x*local:calculate-shrink($x, $y, 480))}</exif:PixelXDimension>,
+                    <exif:PixelYDimension rdf:datatype="http://www.w3.org/2001/XMLSchema#int">{round($y*local:calculate-shrink($x, $y, 480))}</exif:PixelYDimension>
+                    )
+                else if ($type="gq")
+                    then (  
+                        <ac:variantLiteral>Good Quality</ac:variantLiteral>,
+                        <ac:variant rdf:resource ="http://rs.tdwg.org/ac/terms/GoodQuality" />,
+                        <ac:accessURI rdf:resource ="{$dom}/gq/{$ns}/g{$img}.jpg" />,
+                        <exif:PixelXDimension rdf:datatype="http://www.w3.org/2001/XMLSchema#int">{round($x*local:calculate-shrink($x, $y, 1024))}</exif:PixelXDimension>,
+                        <exif:PixelYDimension rdf:datatype="http://www.w3.org/2001/XMLSchema#int">{round($y*local:calculate-shrink($x, $y, 1024))}</exif:PixelYDimension>
+                        )
+                    else ()
+}
+  <dc:format>image/jpeg</dc:format>
+</rdf:Description>
+};
+
+declare function local:calculate-shrink
+($height as xs:integer, $width as xs:integer, $size as xs:integer) as xs:decimal
+{
+let $whRatio := $width div $height
+let $imageMax := if ($whRatio > 1)then ($width) else ($height)
+return ($size div $imageMax)
+};
+
+declare function local:rdf-document-metadata
+()
+{
+""
+};
+
+
 (:
 *********** Get data from GitHub *********
 :)
@@ -266,6 +401,9 @@ let $xmlAgents := csv:parse($textAgents, map { 'header' : true() })
 
 let $licenseDoc := fn:doc('https://raw.githubusercontent.com/baskaufs/Bioimages/master/license.xml')
 let $licenseCategory := $licenseDoc/license/category
+
+let $stdViewDoc := fn:doc('https://raw.githubusercontent.com/baskaufs/Bioimages/master/stdview.xml')
+let $viewCategory := $stdViewDoc/view/viewGroup/viewCategory
 
 (:
 *********** Main Query *********
@@ -313,22 +451,36 @@ xmlns:dc="http://purl.org/dc/elements/1.1/"
 xmlns:dcterms="http://purl.org/dc/terms/"
 xmlns:dwc="http://rs.tdwg.org/dwc/terms/"
 xmlns:dwciri="http://rs.tdwg.org/dwc/iri/"
-xmlns:ac="http://rs.tdwg.org/ac/terms/"
+xmlns:owl="http://www.w3.org/2002/07/owl#"
 xmlns:dsw="http://purl.org/dsw/"
+xmlns:ac="http://rs.tdwg.org/ac/terms/"
 xmlns:xmp="http://ns.adobe.com/xap/1.0/"
+xmlns:xmpRights="http://ns.adobe.com/xap/1.0/rights/"
+xmlns:Iptc4xmpExt="http://iptc.org/std/Iptc4xmpExt/2008-02-29/"
+xmlns:photoshop="http://ns.adobe.com/photoshop/1.0/"
+xmlns:cc="http://creativecommons.org/ns#"
+xmlns:xhv="http://www.w3.org/1999/xhtml/vocab#"
+xmlns:mbank="http://www.morphbank.net/schema/morphbank#"
+xmlns:exif="http://ns.adobe.com/exif/1.0/"
 xmlns:foaf="http://xmlns.com/foaf/0.1/"
-xmlns:tc="http://rs.tdwg.org/ontology/voc/TaxonConcept#"
-xmlns:txn="http://lod.taxonconcept.org/ontology/txn.owl#"
 xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#"
 xmlns:blocal="http://bioimages.vanderbilt.edu/rdf/local#"
       >
         <rdf:Description about="{$iri}">
           {local:rdf-basic-information($iri, $namespace, $image, $imageRecord, $xmlAgents)}
+          {local:rdf-intellectual-property-info($iri, $viewCategory/stdview[@id=substring($imageRecord/view/text(),2)]/text(), $imageRecord, $xmlAgents, $licenseCategory)}
+          {local:rdf-relationships($iri,$imageRecord/foaf_depicts/text(),substring($imageRecord/dcterms_created/text(),1,10))}
+          {local:rdf-location($imageRecord)}
         </rdf:Description>
+        {
+        let $accessPoints:=("bq","tn","lq","gq")
+        for $ap in $accessPoints
+        return local:service-access-point($domain, $namespace, $image, $iri, $ap, $imageRecord/exif_PixelXDimension/text(),$imageRecord/exif_PixelYDimension/text() )
+        }
         <rdf:Description about="{$iri}.rdf">
           <rdf:type rdf:resource ="http://xmlns.com/foaf/0.1/Document" />
           <dc:format>application/rdf+xml</dc:format>
           <dcterms:identifier>{$iri}.rdf</dcterms:identifier>
-
+          {local:rdf-document-metadata()}
         </rdf:Description>
        </rdf:RDF>
