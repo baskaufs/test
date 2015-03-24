@@ -42,6 +42,14 @@ else
   ""
 };
 
+declare function local:extension
+($contentType as xs:string) as xs:string
+{
+if ($contentType="text/html")
+then "htm"
+else "rdf"
+};
+
 declare function local:substring-after-last
 ($string as xs:string?, $delim as xs:string) as xs:string?
 {
@@ -454,16 +462,17 @@ Delete this section if serving the files directly
 :)
 
 for $imgRecord in $xmlImages/csv/record, $imagesToWrite in distinct-values($xmlImagesToWrite/csv/record/entry)
-where $imgRecord/dcterms_identifier/text() = $imagesToWrite
-let $fileName := local:substring-after-last($imgRecord/dcterms_identifier/text(),"/")
-let $temp1 := substring-before($imgRecord/dcterms_identifier/text(),concat("/",$fileName))
-let $namespace := local:substring-after-last($temp1,"/")
-
-let $contentType := "text/html"
-let $image := $fileName
-
-let $filePath := concat($rootPath,"\", $namespace,"\", $fileName,".htm")
-return (file:create-dir(concat($rootPath,"\",$namespace)), file:write($filePath,
+  where $imgRecord/dcterms_identifier/text() = $imagesToWrite
+  let $fileName := local:substring-after-last($imgRecord/dcterms_identifier/text(),"/")
+  let $temp1 := substring-before($imgRecord/dcterms_identifier/text(),concat("/",$fileName))
+  let $namespace := local:substring-after-last($temp1,"/")
+  
+  let $types := ("text/html","application/rdf+xml")
+  let $image := $fileName
+  
+  for $contentType in $types
+    let $filePath := concat($rootPath,"\", $namespace,"\", $fileName,'.',local:extension($contentType) )
+    return (file:create-dir(concat($rootPath,"\",$namespace)), file:write($filePath,
 
 (:
 *********** Main Query *********
@@ -506,7 +515,9 @@ return
         </body>
        </html>)
        
-  else <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  else if ($contentType = "application/rdf+xml")
+       then (
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
 xmlns:dc="http://purl.org/dc/elements/1.1/"
 xmlns:dcterms="http://purl.org/dc/terms/"
@@ -542,5 +553,8 @@ xmlns:blocal="http://bioimages.vanderbilt.edu/rdf/local#"
           {local:rdf-document-metadata($iri, $imageRecord/dcterms_modified/text())}
         </rdf:Description>
        </rdf:RDF>
+       
+     )
+     else ()
 (: delete everything after this if serving files directly :)       
        ))
