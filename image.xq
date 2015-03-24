@@ -18,8 +18,6 @@ declare namespace foaf="http://xmlns.com/foaf/0.1/";
 declare namespace geo="http://www.w3.org/2003/01/geo/wgs84_pos#";
 (:
 TODO: fix broken JavaScript for resizing image,
-figure out how to link to the highres image at Morphbank.\,
-is there a field for copyright date?  I thought we were going to have one?
 think about what last modified means (document generated vs. database record updated),
 Is Bioimages http://biocol.org/urn:lsid:biocol.org:col:35115 ?
 Fix DOCTYPE and XML declarations,
@@ -219,14 +217,14 @@ return (
 };
 
 declare function local:browser-optimize-script
-($dom as xs:string, $ns as xs:string,$img as xs:string)
+($dom as xs:string, $ns as xs:string,$img as xs:string, $sap)
 {
 <script type="text/javascript">{"
 document.getElementById('paste').setAttribute('class', browser); // set css for browser type
 notPortableDevice=((screen.availWidth > 500) || (screen.availHeight > 500));  //enable highres image for big screen
 if (notPortableDevice)
  {
- document.getElementById('replaceImage').innerHTML='<img alt=&quot;"||$dom||"/"||$ns||"/"||$img||"&quot; src=&quot;"||$dom||"/gq/"||$ns||"/g"||$img||".jpg&quot; />'; }
+ document.getElementById('replaceImage').innerHTML='<a href=&quot;"||$sap||"&quot;><img alt=&quot;"||$dom||"/"||$ns||"/"||$img||"&quot; src=&quot;"||$dom||"/gq/"||$ns||"/g"||$img||".jpg&quot; /></a>'; }
 "}</script>
 };
 
@@ -279,6 +277,7 @@ return (
 <cc:license rdf:resource="{$license[@id=$record/usageTermsIndex/text()]/IRI/text()}"/>,
 <xhv:license rdf:resource="{$license[@id=$record/usageTermsIndex/text()]/IRI/text()}"/>,
 <dcterms:license rdf:resource="{$license[@id=$record/usageTermsIndex/text()]/IRI/text()}"/>,
+<dcterms:dateCopyrighted rdf:datatype="http://www.w3.org/2001/XMLSchema#gyear">{$record/dcterms_dateCopyrighted/text()}</dcterms:dateCopyrighted>,
 <xmpRights:UsageTerms xml:lang="en">{$license[@id=$record/usageTermsIndex/text()]/string/text()}</xmpRights:UsageTerms>,
 <xmpRights:WebStatement>{$license[@id=$record/usageTermsIndex/text()]/IRI/text()}</xmpRights:WebStatement>,
 <ac:licenseLogoURL>{$license[@id=$record/usageTermsIndex/text()]/thumb/text()}</ac:licenseLogoURL>,
@@ -332,7 +331,7 @@ else ()
 };
 
 declare function local:service-access-point
-($dom, $ns, $img, $id, $type, $x, $y)
+($dom, $ns, $img, $id, $type, $x, $y, $sap)
 {
 <rdf:Description rdf:about="{$id}#{$type}">
   <rdf:type rdf:resource ="http://rs.tdwg.org/ac/terms/ServiceAccessPoint" />
@@ -342,7 +341,7 @@ then (
     <ac:variantLiteral>Best Quality</ac:variantLiteral>,
     <ac:variant rdf:resource ="http://rs.tdwg.org/ac/terms/BestQuality" />,
     (: The next line is what needs to be fixed!  :)
-    <ac:accessURI rdf:resource ="http://www.morphbank.net/?id=829563&amp;imgType=jpeg" />,
+    <ac:accessURI rdf:resource ="{$sap}" />,
     <exif:PixelXDimension rdf:datatype="http://www.w3.org/2001/XMLSchema#int">{$x}</exif:PixelXDimension>,
     <exif:PixelYDimension rdf:datatype="http://www.w3.org/2001/XMLSchema#int">{$y}</exif:PixelYDimension>
     )
@@ -510,7 +509,7 @@ return
             {local:intellectual-property-info($domain, $namespace, $image, $imageRecord, $xmlAgents, $licenseCategory)}
             {local:reference-info($imageRecord, $xmlDeterminations, $xmlSensu)}
           </div>
-          {local:browser-optimize-script($domain, $namespace, $image)}
+          {local:browser-optimize-script($domain, $namespace, $image, $imageRecord/ac_hasServiceAccessPoint/text())}
           {local:google-analytics-ping()}
         </body>
        </html>)
@@ -547,13 +546,12 @@ xmlns:blocal="http://bioimages.vanderbilt.edu/rdf/local#"
         {
         let $accessPoints:=("bq","tn","lq","gq")
         for $ap in $accessPoints
-        return local:service-access-point($domain, $namespace, $image, $iri, $ap, $imageRecord/exif_PixelXDimension/text(),$imageRecord/exif_PixelYDimension/text() )
+        return local:service-access-point($domain, $namespace, $image, $iri, $ap, $imageRecord/exif_PixelXDimension/text(),$imageRecord/exif_PixelYDimension/text(), $imageRecord/ac_hasServiceAccessPoint/text() )
         }
         <rdf:Description rdf:about="{$iri}.rdf">
           {local:rdf-document-metadata($iri, $imageRecord/dcterms_modified/text())}
         </rdf:Description>
        </rdf:RDF>
-       
      )
      else ()
 (: delete everything after this if serving files directly :)       
