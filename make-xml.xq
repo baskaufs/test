@@ -48,6 +48,40 @@ let $licenseCategory := $licenseDoc/license/category
 let $stdViewDoc := fn:doc('https://raw.githubusercontent.com/baskaufs/Bioimages/master/stdview.xml')
 let $viewCategory := $stdViewDoc/view/viewGroup/viewCategory
 
-return <csv>
-{$xmlImages/csv/record}
-</csv>
+return (file:write(concat($rootPath,"\organisms.xml"),
+<organisms>
+{for $Organisms in $xmlOrganisms/csv/record
+return ($Organisms)}
+</organisms>
+),
+file:write(concat($rootPath,"\determinations.xml"),
+<determinations>
+{for $Determinations in $xmlDeterminations/csv/record
+return ($Determinations)}
+</determinations>
+),
+file:write(concat($rootPath,"\names.xml"),
+<names>
+{for $Names in $xmlNames/csv/record
+return ($Names)}
+</names>
+),
+file:write(concat($rootPath,"\sensu.xml"),
+<sensu>
+{for $Sensu in $xmlSensu/csv/record
+return ($Sensu)}
+</sensu>
+),
+file:write(concat($rootPath,"\images.xml"),
+<images>
+{for $Images in $xmlImages/csv/record
+return ($Images)}
+</images>
+),
+file:write(concat($rootPath,"\agents.xml"),
+<agents>
+{for $Agents in $xmlAgents/csv/record
+return ($Agents)}
+</agents>
+)
+    )
