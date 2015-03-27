@@ -17,7 +17,7 @@ declare namespace Iptc4xmpExt="http://iptc.org/std/Iptc4xmpExt/2008-02-29/";
 declare namespace foaf="http://xmlns.com/foaf/0.1/";
 declare namespace geo="http://www.w3.org/2003/01/geo/wgs84_pos#";
 (:
-TODO: fix broken JavaScript for resizing image,
+TODO:
 think about what last modified means (document generated vs. database record updated),
 Is Bioimages http://biocol.org/urn:lsid:biocol.org:col:35115 ?
 Fix DOCTYPE and XML declarations,
@@ -216,15 +216,18 @@ return (
 <br/>
 };
 
+(: Note: I solved the problem of the escaping of essential javascript characters by putting all of the
+problematic stuff into an external file and then loading it as a function, then calling the function. :)
 declare function local:browser-optimize-script
-($dom as xs:string, $ns as xs:string,$img as xs:string, $sap)
+($dom as xs:string, $ns as xs:string,$name as xs:string, $id, $sap)
 {
+<script src="../check-screen-size.js" type="text/javascript">//
+</script>,
 <script type="text/javascript">{"
-document.getElementById('paste').setAttribute('class', browser); // set css for browser type
-notPortableDevice=((screen.availWidth > 500) || (screen.availHeight > 500));  //enable highres image for big screen
-if (notPortableDevice)
- {
- document.getElementById('replaceImage').innerHTML='<a href=&quot;"||$sap||"&quot;><img alt=&quot;"||$dom||"/"||$ns||"/"||$img||"&quot; src=&quot;"||$dom||"/gq/"||$ns||"/g"||$img||".jpg&quot; /></a>'; }
+hiresSAP='"||$sap||"'
+imgIRI='"||$id||"'
+imgSource='"||$dom||"/gq/"||$ns||"/g"||$name||"'
+checkScreenSize(hiresSAP,imgIRI,imgSource);
 "}</script>
 };
 
