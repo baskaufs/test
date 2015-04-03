@@ -13,11 +13,6 @@ declare namespace txn="http://lod.taxonconcept.org/ontology/txn.owl#";
 declare namespace geo="http://www.w3.org/2003/01/geo/wgs84_pos#";
 declare namespace blocal="http://bioimages.vanderbilt.edu/rdf/local#";
 
-(:
-TODO: 
-fix nominal concepts
-:)
-
 declare function local:substring-after-last
 ($string as xs:string?, $delim as xs:string) as xs:string?
 {
@@ -33,27 +28,17 @@ let $rootPath := "c:\test"
 (: "file:create-dir($dir as xs:string) as empty-sequence()" will create a directory or do nothing if it already exists :)
 let $nothing := file:create-dir($rootPath)
 
-(: Uses http:send-request to fetch CSV files from GitHub :)
-(: BaseX 8.0 requires 'map' keyword) before key/value maps :)
-(: Older versions of BaseX may not have this requirement :)
-
 (:let $textOrganisms := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/organisms.csv'/>)[2]:)
 let $textOrganisms := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/organisms-small.csv'/>)[2]
 let $xmlOrganisms := csv:parse($textOrganisms, map { 'header' : true() })
-(: When we implement Ken's output with pipe ("|") separators, the parse function will have to change to this:
-let $xmlOrganisms := csv:parse($textOrganisms, map { 'header' : true(),'separator' : "|" })
-:)
 
 let $textDeterminations := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/determinations.csv'/>)[2]
-(:let $textDeterminations := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/determinations-small.csv'/>)[2]:)
 let $xmlDeterminations := csv:parse($textDeterminations, map { 'header' : true(),'separator' : "|"})
 
 let $textNames := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/names.csv'/>)[2]
-(:let $textNames := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/names-small.csv'/>)[2]:)
 let $xmlNames := csv:parse($textNames, map { 'header' : true(),'separator' : "|" })
 
 let $textSensu := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/sensu.csv'/>)[2]
-(:let $textSensu := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/sensu-small.csv'/>)[2]:)
 let $xmlSensu := csv:parse($textSensu, map { 'header' : true(),'separator' : "|" })
 
 (:let $textImages := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/images.csv'/>)[2]:)
@@ -61,7 +46,6 @@ let $textImages := http:send-request(<http:request method='get' href='https://ra
 let $xmlImages := csv:parse($textImages, map { 'header' : true() })
 
 let $textAgents := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/agents.csv'/>)[2]
-(:let $textAgents := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/agents-small.csv'/>)[2]:)
 let $xmlAgents := csv:parse($textAgents, map { 'header' : true(),'separator' : "|" })
 
 let $textLinks := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/links.csv'/>)[2]
@@ -245,12 +229,16 @@ xmlns:blocal="http://bioimages.vanderbilt.edu/rdf/local#"
                   <dwc:vernacularName xml:lang="en">{$nameRecord/dwc_vernacularName/text()}</dwc:vernacularName>,
                   <dwc:scientificNameAuthorship>{$nameRecord/dwc_scientificNameAuthorship/text()}</dwc:scientificNameAuthorship>,
                   <dwc:scientificName>{$nameRecord/dwc_genus/text()||" "||$nameRecord/dwc_specificEpithet/text()}</dwc:scientificName>,
-                  <dwc:nameAccordingTo>{$sensuRecord/dc_creator/text()||", "||$sensuRecord/dcterms_created/text()||". "||$sensuRecord/dc_publisher/text()||"."}</dwc:nameAccordingTo>,
+                  if ($sensuRecord/dcterms_identifier/text() != "nominal")
+                  then <dwc:nameAccordingTo>{$sensuRecord/dc_creator/text()||", "||$sensuRecord/dcterms_created/text()||". "||$sensuRecord/dc_publisher/text()||"."}</dwc:nameAccordingTo>
+                  else (),
                   <blocal:secundumSignature>{$sensuRecord/tcsSignature/text()}</blocal:secundumSignature>,
-                  <dwciri:toTaxon><dwc:Taxon>
-                       <tc:accordingTo rdf:resource="{$sensuRecord/iri/text()}" />
+                  <dwciri:toTaxon><dwc:Taxon>{
+                        if ($sensuRecord/dcterms_identifier/text() != "nominal")
+                        then <tc:accordingTo rdf:resource="{$sensuRecord/iri/text()}" />
+                        else (),
                        <tc:hasName rdf:resource="urn:lsid:ubio.org:namebank:{$nameRecord/ubioID/text()}"/>
-                  </dwc:Taxon></dwciri:toTaxon>,
+                  }</dwc:Taxon></dwciri:toTaxon>,
                   if (string-length($detRecord/dwc_dateIdentified/text()) = 10)
                   then (<dwc:dateIdentified rdf:datatype="http://www.w3.org/2001/XMLSchema#date">{$detRecord/dwc_dateIdentified/text()}</dwc:dateIdentified>)
                   else (

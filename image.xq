@@ -121,7 +121,11 @@ return (
                    if ($name/dwc_taxonRank/text() = "variety")
                    then (<em>{$name/dwc_genus/text()||" "||$name/dwc_specificEpithet/text()}</em>," var. ",<em>{$name/dwc_infraspecificEpithet/text()}</em>, " (", $name/dwc_vernacularName/text(),")")
                    else ()
-          }</h2>&#32;<h3>{$name/dwc_scientificNameAuthorship/text()}</h3>&#32;<h6>sec. {$sensu/tcsSignature/text()}</h6>
+          }</h2>&#32;<h3>{$name/dwc_scientificNameAuthorship/text()}</h3>&#32;<h6>{
+           if ($sensu/dcterms_identifier/text() != "nominal")
+           then ("sec. "||$sensu/tcsSignature/text())
+           else ("nominal concept")
+          }</h6>
 <br/>
 common name: {$name/dwc_vernacularName/text()}<br/>
 family: {$name/dwc_family/text()}<br/>
@@ -209,9 +213,16 @@ declare function local:reference-info
 for $det in $xmlDet//record,
     $sensu in $xmlSen//record
 where $det/dsw_identified/text()=$record/foaf_depicts/text() and $sensu/dcterms_identifier=$det/nameAccordingToID
+let $sensuScreen := $sensu/dcterms_identifier/text()
+group by $sensuScreen
 order by lower-case($sensu/tcsSignature/text())
 return (
-<h6>{$sensu/tcsSignature/text()} =<br/>{$sensu/dc_creator/text()}, {$sensu/dcterms_created/text()}. {$sensu/dcterms_title/text()}. {$sensu/dc_publisher/text()}. <br/></h6>
+           if ($sensu/dcterms_identifier/text() != "nominal")
+           then (<h6>{$sensu/tcsSignature/text()} =</h6>,
+                <br/>,
+                <h6>{$sensu/dc_creator/text()}, {$sensu/dcterms_created/text()}. {$sensu/dcterms_title/text()}. {$sensu/dc_publisher/text()}. </h6>,
+                <br/>)
+           else ()
       ),
 <br/>
 };
@@ -425,20 +436,14 @@ let $nothing := file:create-dir($rootPath)
 (:let $textOrganisms := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/organisms.csv'/>)[2]:)
 let $textOrganisms := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/organisms-small.csv'/>)[2]
 let $xmlOrganisms := csv:parse($textOrganisms, map { 'header' : true() })
-(: When we implement Ken's output with pipe ("|") separators, the parse function will have to change to this:
-let $xmlOrganisms := csv:parse($textOrganisms, map { 'header' : true(),'separator' : "|" })
-:)
 
-(:let $textDeterminations := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/determinations.csv'/>)[2]:)
-let $textDeterminations := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/determinations-small.csv'/>)[2]
-let $xmlDeterminations := csv:parse($textDeterminations, map { 'header' : true() })
+let $textDeterminations := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/determinations.csv'/>)[2]
+let $xmlDeterminations := csv:parse($textDeterminations, map { 'header' : true(),'separator' : "|" })
 
-(:let $textNames := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/names.csv'/>)[2]:)
-let $textNames := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/names-small.csv'/>)[2]
-let $xmlNames := csv:parse($textNames, map { 'header' : true() })
+let $textNames := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/names.csv'/>)[2]
+let $xmlNames := csv:parse($textNames, map { 'header' : true(),'separator' : "|" })
 
 let $textSensu := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/sensu.csv'/>)[2]
-(:let $textSensu := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/sensu-small.csv'/>)[2]:)
 let $xmlSensu := csv:parse($textSensu, map { 'header' : true(),'separator' : "|" })
 
 (:let $textImages := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/images.csv'/>)[2]:)
@@ -446,7 +451,6 @@ let $textImages := http:send-request(<http:request method='get' href='https://ra
 let $xmlImages := csv:parse($textImages, map { 'header' : true() })
 
 let $textAgents := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/agents.csv'/>)[2]
-(:let $textAgents := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/agents-small.csv'/>)[2]:)
 let $xmlAgents := csv:parse($textAgents, map { 'header' : true(),'separator' : "|" })
 
 let $licenseDoc := fn:doc('https://raw.githubusercontent.com/baskaufs/Bioimages/master/license.xml')
