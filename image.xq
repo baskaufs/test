@@ -433,9 +433,8 @@ let $nothing := file:create-dir($rootPath)
 (:
 *********** Get data from GitHub *********
 :)
-(:let $textOrganisms := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/organisms.csv'/>)[2]:)
-let $textOrganisms := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/organisms-small.csv'/>)[2]
-let $xmlOrganisms := csv:parse($textOrganisms, map { 'header' : true() })
+let $textOrganisms := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/organisms.csv'/>)[2]
+let $xmlOrganisms := csv:parse($textOrganisms, map { 'header' : true(),'separator' : "|" })
 
 let $textDeterminations := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/determinations.csv'/>)[2]
 let $xmlDeterminations := csv:parse($textDeterminations, map { 'header' : true(),'separator' : "|" })

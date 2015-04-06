@@ -28,9 +28,8 @@ let $rootPath := "c:\test"
 (: "file:create-dir($dir as xs:string) as empty-sequence()" will create a directory or do nothing if it already exists :)
 let $nothing := file:create-dir($rootPath)
 
-(:let $textOrganisms := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/organisms.csv'/>)[2]:)
-let $textOrganisms := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/organisms-small.csv'/>)[2]
-let $xmlOrganisms := csv:parse($textOrganisms, map { 'header' : true() })
+let $textOrganisms := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/organisms.csv'/>)[2]
+let $xmlOrganisms := csv:parse($textOrganisms, map { 'header' : true(),'separator' : "|" })
 
 let $textDeterminations := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/determinations.csv'/>)[2]
 let $xmlDeterminations := csv:parse($textDeterminations, map { 'header' : true(),'separator' : "|"})
