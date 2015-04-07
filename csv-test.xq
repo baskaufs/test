@@ -120,6 +120,13 @@ xmlns:blocal="http://bioimages.vanderbilt.edu/rdf/local#"
         return (<dsw:hasOccurrence>
               <rdf:Description rdf:about='{$orgRecord/dcterms_identifier/text()||"#"||$occurrenceDate}'>{
                 <rdf:type rdf:resource="http://rs.tdwg.org/dwc/terms/Occurrence"/>,
+                
+               for $agent in $xmlAgents/csv/record
+               where $agent/dcterms_identifier/text()=$depiction[1]/photographerCode/text()
+               return (<dwciri:recordedBy rdf:resource="{$agent/iri/text()}"/>,
+               <dwc:recordedBy>{$agent/dc_contributor/text()}</dwc:recordedBy>)
+               ,
+
                 <dsw:atEvent>
                     <rdf:Description rdf:about='{$orgRecord/dcterms_identifier/text()||"#"||$occurrenceDate||"eve"}'>{
                       <rdf:type rdf:resource="http://rs.tdwg.org/dwc/terms/Event"/>,
