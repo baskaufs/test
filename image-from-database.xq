@@ -431,7 +431,7 @@ let $xmlAgents := /agents
 let $licenseCategory := /license/category
 let $viewCategory := view/viewGroup/viewCategory
 
-let $imagesToWriteDoc := file:read-text(concat('file:///',$localFilesFolderUnix,'/images-to-write.txt'))
+let $imagesToWriteDoc := file:read-text(concat('./',$localFilesFolderUnix,'/images-to-write.txt'))
 let $xmlImagesToWrite := csv:parse($imagesToWriteDoc, map { 'header' : false() })
 
 (:
@@ -449,8 +449,12 @@ for $imgRecord in $xmlImages//record, $imagesToWrite in distinct-values($xmlImag
   let $image := $fileName
   
   for $contentType in $types
+(: stupidly,the direction of the slash differs between linux and windows!  Windows version:
     let $filePath := concat($rootPath,"\", $namespace,"\", $fileName,'.',local:extension($contentType) )
     return (file:create-dir(concat($rootPath,"\",$namespace)), file:write($filePath,
+:)
+    let $filePath := concat($rootPath,"/", $namespace,"/", $fileName,'.',local:extension($contentType) )
+    return (file:create-dir(concat($rootPath,"/",$namespace)), file:write($filePath,
 
 (:
 *********** Main Query *********
