@@ -411,10 +411,10 @@ declare function local:rdf-document-metadata
 Delete this section if serving file directly
 :)
 
-let $localFilesFolderUnix := "c:/test"
+let $localFilesFolderUnix := "test"
 
 (: Create root folder if it doesn't already exist. :)
-let $rootPath := "c:\test"
+let $rootPath := "test"
 (: "file:create-dir($dir as xs:string) as empty-sequence()" will create a directory or do nothing if it already exists :)
 let $nothing := file:create-dir($rootPath)
 
@@ -488,7 +488,7 @@ return
             {local:intellectual-property-info($domain, $namespace, $image, $imageRecord, $xmlAgents, $licenseCategory)}
             {local:reference-info($imageRecord, $xmlDeterminations, $xmlSensu)}
           </div>
-          {local:browser-optimize-script($domain, $namespace, $image, $imageRecord/ac_hasServiceAccessPoint/text())}
+          {local:browser-optimize-script($domain, $namespace, $image, $iri, $imageRecord/ac_hasServiceAccessPoint/text())}
           {local:google-analytics-ping()}
         </body>
        </html>)
