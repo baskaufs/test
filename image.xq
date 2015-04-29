@@ -466,12 +466,12 @@ Delete this section if serving the files directly
 :)
 
 for $imgRecord in $xmlImages//record, $imagesToWrite in distinct-values($xmlImagesToWrite//record/entry)
-  where $imgRecord/dcterms_identifier/text() = $imagesToWrite
+  where $imgRecord/dcterms_identifier/text() = $imagesToWrite (: comment out this line to write all :)
   let $fileName := local:substring-after-last($imgRecord/dcterms_identifier/text(),"/")
   let $temp1 := substring-before($imgRecord/dcterms_identifier/text(),concat("/",$fileName))
   let $namespace := local:substring-after-last($temp1,"/")
   
-  let $types := ("text/html","application/rdf+xml")
+  let $types := ("text/html","application/rdf+xml") (: comment out "text/html" to write all RDF :)
   let $image := $fileName
   
   for $contentType in $types
@@ -521,6 +521,7 @@ return
        
   else if ($contentType = "application/rdf+xml")
        then (
+(: move the rdf:RDF element outside of the main query to write all :)
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
 xmlns:dc="http://purl.org/dc/elements/1.1/"
