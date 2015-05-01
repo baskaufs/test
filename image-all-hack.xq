@@ -351,15 +351,17 @@ declare function local:service-access-point
   <rdf:type rdf:resource ="http://rs.tdwg.org/ac/terms/ServiceAccessPoint" />
 {
 if ($type="bq")
-then (  
+then if ($sap!="")      (: This is really a hack fix when the BestQuality variant isn't online yet.  Really, the BestQuality variant just shouldn't be instantiated.  :)
+     then 
+    (  
     <ac:variantLiteral>Best Quality</ac:variantLiteral>,
     <ac:variant rdf:resource ="http://rs.tdwg.org/ac/terms/BestQuality" />,
-    (: The next line is what needs to be fixed!  :)
     <ac:accessURI rdf:resource ="{$sap}" />,
     <exif:PixelXDimension rdf:datatype="http://www.w3.org/2001/XMLSchema#int">{$x}</exif:PixelXDimension>,
     <exif:PixelYDimension rdf:datatype="http://www.w3.org/2001/XMLSchema#int">{$y}</exif:PixelYDimension>
     )
-    else if ($type="tn")
+    else ()
+else if ($type="tn")
         then (  
             <ac:variantLiteral>Thumbnail</ac:variantLiteral>,
             <ac:variant rdf:resource ="http://rs.tdwg.org/ac/terms/Thumbnail" />,
@@ -505,7 +507,7 @@ return (
 
         <rdf:Description rdf:about="{$iri}">
           {local:rdf-basic-information($iri, $namespace, $image, $imgRecord, $xmlAgents)}
-          {local:rdf-intellectual-property-info($iri, "463914", $imgRecord, $xmlAgents, $licenseCategory)}
+          {local:rdf-intellectual-property-info($iri, $viewCategory/stdview[@id=substring($imgRecord/view/text(),2)]/text(), $imgRecord, $xmlAgents, $licenseCategory)}
           {local:rdf-relationships($iri,$imgRecord/foaf_depicts/text(),substring($imgRecord/dcterms_created/text(),1,10))}
           {local:rdf-location($imgRecord)}
         

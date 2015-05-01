@@ -55,13 +55,8 @@ let $lastPublished := $lastPublishedDoc/body/dcterms:modified/text()
 let $organismsToWriteDoc := file:read-text(concat('file:///',$localFilesFolderUnix,'/organisms-to-write.txt'))
 let $xmlOrganismsToWrite := csv:parse($organismsToWriteDoc, map { 'header' : false() })
 
-for $orgRecord in $xmlOrganisms/csv/record, $organismsToWrite in distinct-values($xmlOrganismsToWrite/csv/record/entry)
-where $orgRecord/dcterms_identifier/text() = $organismsToWrite
-let $fileName := local:substring-after-last($orgRecord/dcterms_identifier/text(),"/")
-let $temp := substring-before($orgRecord/dcterms_identifier/text(),concat("/",$fileName))
-let $namespace := local:substring-after-last($temp,"/")
-let $filePath := concat($rootPath,"\", $namespace,"\", $fileName,".rdf")
-return (file:create-dir(concat($rootPath,"\",$namespace)), file:write($filePath,
+let $filePath := "c:\test\organisms.rdf"
+return (file:write($filePath,
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
 xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -75,7 +70,13 @@ xmlns:tc="http://rs.tdwg.org/ontology/voc/TaxonConcept#"
 xmlns:txn="http://lod.taxonconcept.org/ontology/txn.owl#"
 xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#"
 xmlns:blocal="http://bioimages.vanderbilt.edu/rdf/local#"
->
+>{
+
+for $orgRecord in $xmlOrganisms/csv/record, $organismsToWrite in distinct-values($xmlOrganismsToWrite/csv/record/entry)
+let $fileName := local:substring-after-last($orgRecord/dcterms_identifier/text(),"/")
+let $temp := substring-before($orgRecord/dcterms_identifier/text(),concat("/",$fileName))
+let $namespace := local:substring-after-last($temp,"/")
+return (
       <rdf:Description rdf:about="{$orgRecord/dcterms_identifier/text()}">{
       <rdf:type rdf:resource="http://rs.tdwg.org/dwc/terms/Organism"/>,
       <rdf:type rdf:resource="http://purl.org/dc/terms/PhysicalResource"/>,
@@ -95,7 +96,7 @@ xmlns:blocal="http://bioimages.vanderbilt.edu/rdf/local#"
       <dwc:establishmentMeans>{$orgRecord/dwc_establishmentMeans/text()}</dwc:establishmentMeans>,
       if ($orgRecord/cameo/text() != "")
       then <blocal:cameo rdf:resource="{$orgRecord/cameo/text()}"/>
-      else (),      
+      else (),
       if ($orgRecord/dwc_collectionCode/text() != "")
       then (
            for $agent in $xmlAgents/csv/record
@@ -274,7 +275,7 @@ xmlns:blocal="http://bioimages.vanderbilt.edu/rdf/local#"
                      )
               
               
-      }</rdf:Description>
+      }</rdf:Description>,
        <rdf:Description rdf:about="{$orgRecord/dcterms_identifier/text()||".rdf"}">{
             <rdf:type rdf:resource ="http://xmlns.com/foaf/0.1/Document" />,
             <dc:format>application/rdf+xml</dc:format>,
@@ -287,12 +288,7 @@ xmlns:blocal="http://bioimages.vanderbilt.edu/rdf/local#"
             <dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">{fn:current-dateTime()}</dcterms:modified>,
             <dcterms:references rdf:resource="{$orgRecord/dcterms_identifier/text()}"/>,
             <foaf:primaryTopic rdf:resource="{$orgRecord/dcterms_identifier/text()}"/>
-       }</rdf:Description></rdf:RDF>
-       )),
-let $localFilesFolderPC := "c:\test"
-let $lastPublished := fn:current-dateTime()
-return (file:write(concat($localFilesFolderPC,"\last-published.xml"),
-<body>
-<dcterms:modified>{$lastPublished}</dcterms:modified>
-</body>
-))
+       }</rdf:Description>
+       )
+}</rdf:RDF>   
+   ))

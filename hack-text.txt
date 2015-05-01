@@ -1,1 +1,0 @@
-$viewCategory/stdview[@id=substring($imgRecord/view/text(),2)]/text()
