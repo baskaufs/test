@@ -144,11 +144,16 @@ xmlns:blocal="http://bioimages.vanderbilt.edu/rdf/local#"
                         <dsw:locatedAt>
                            <rdf:Description rdf:about='{$orgRecord/dcterms_identifier/text()||"#"||$occurrenceDate||"loc"}'>{
                              <rdf:type rdf:resource="http://purl.org/dc/terms/Location"/>,
-                             <geo:lat>{$orgRecord/dwc_decimalLatitude/text()}</geo:lat>,
-                             <dwc:decimalLatitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">{$orgRecord/dwc_decimalLatitude/text()}</dwc:decimalLatitude>,
-                             <geo:long>{$orgRecord/dwc_decimalLongitude/text()}</geo:long>,
-                             <dwc:decimalLongitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">{$orgRecord/dwc_decimalLongitude/text()}</dwc:decimalLongitude>,
-                             <dwc:coordinateUncertaintyInMeters rdf:datatype="http://www.w3.org/2001/XMLSchema#int">{$depiction[1]/dwc_coordinateUncertaintyInMeters/text()}</dwc:coordinateUncertaintyInMeters>,
+                             if ($orgRecord/dwc_decimalLatitude/text() != "")
+                             then (
+                                 <geo:lat>{$orgRecord/dwc_decimalLatitude/text()}</geo:lat>,
+                                 <dwc:decimalLatitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">{$orgRecord/dwc_decimalLatitude/text()}</dwc:decimalLatitude>,
+                                 <geo:long>{$orgRecord/dwc_decimalLongitude/text()}</geo:long>,
+                                 <dwc:decimalLongitude rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">{$orgRecord/dwc_decimalLongitude/text()}</dwc:decimalLongitude>,
+                                 <dwc:coordinateUncertaintyInMeters rdf:datatype="http://www.w3.org/2001/XMLSchema#int">{$depiction[1]/dwc_coordinateUncertaintyInMeters/text()}</dwc:coordinateUncertaintyInMeters>,
+                                 <dwc:geodeticDatum>{$depiction[1]/dwc_geodeticDatum/text()}</dwc:geodeticDatum>
+                                  )
+                             else (),
                              if ($orgRecord/geo_alt/text() != "-9999")
                              then (
                                <geo:alt>{$orgRecord/geo_alt/text()}</geo:alt>,
@@ -156,7 +161,6 @@ xmlns:blocal="http://bioimages.vanderbilt.edu/rdf/local#"
                                <dwc:maximumElevationInMeters rdf:datatype="http://www.w3.org/2001/XMLSchema#int">{$orgRecord/geo_alt/text()}</dwc:maximumElevationInMeters>
                                   )
                              else (),
-                             <dwc:geodeticDatum>{$depiction[1]/dwc_geodeticDatum/text()}</dwc:geodeticDatum>,
                              <dwc:locality>{$depiction[1]/dwc_locality/text()}</dwc:locality>,
                              <dwc:georeferenceRemarks>{$orgRecord/dwc_georeferenceRemarks/text()}</dwc:georeferenceRemarks>,
                              <dwc:continent>{$depiction[1]/dwc_continent/text()}</dwc:continent>,
