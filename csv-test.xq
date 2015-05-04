@@ -132,7 +132,15 @@ xmlns:blocal="http://bioimages.vanderbilt.edu/rdf/local#"
                 <dsw:atEvent>
                     <rdf:Description rdf:about='{$orgRecord/dcterms_identifier/text()||"#"||$occurrenceDate||"eve"}'>{
                       <rdf:type rdf:resource="http://rs.tdwg.org/dwc/terms/Event"/>,
-                      <dwc:eventDate rdf:datatype="http://www.w3.org/2001/XMLSchema#date">{$occurrenceDate}</dwc:eventDate>,
+                      
+                      if (string-length($occurrenceDate) = 10)
+                      then (<dwc:eventDate rdf:datatype="http://www.w3.org/2001/XMLSchema#date">{$occurrenceDate}</dwc:eventDate>)
+                      else (
+                           if (string-length($occurrenceDate) = 4)
+                           then (<dwc:eventDate rdf:datatype="http://www.w3.org/2001/XMLSchema#gYear">{$occurrenceDate}</dwc:eventDate>)
+                           else (<dwc:eventDate>{$occurrenceDate}</dwc:eventDate>)
+                           ),
+                      
                         <dsw:locatedAt>
                            <rdf:Description rdf:about='{$orgRecord/dcterms_identifier/text()||"#"||$occurrenceDate||"loc"}'>{
                              <rdf:type rdf:resource="http://purl.org/dc/terms/Location"/>,

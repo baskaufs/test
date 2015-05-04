@@ -52,9 +52,6 @@ let $xmlLinks := csv:parse($textLinks, map { 'header' : true() })
 let $lastPublishedDoc := fn:doc(concat('file:///',$localFilesFolderUnix,'/last-published.xml'))
 let $lastPublished := $lastPublishedDoc/body/dcterms:modified/text()
 
-let $organismsToWriteDoc := file:read-text(concat('file:///',$localFilesFolderUnix,'/organisms-to-write.txt'))
-let $xmlOrganismsToWrite := csv:parse($organismsToWriteDoc, map { 'header' : false() })
-
 let $filePath := "c:\test\organisms.rdf"
 return (file:write($filePath,
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -72,7 +69,7 @@ xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#"
 xmlns:blocal="http://bioimages.vanderbilt.edu/rdf/local#"
 >{
 
-for $orgRecord in $xmlOrganisms/csv/record, $organismsToWrite in distinct-values($xmlOrganismsToWrite/csv/record/entry)
+for $orgRecord in $xmlOrganisms/csv/record
 let $fileName := local:substring-after-last($orgRecord/dcterms_identifier/text(),"/")
 let $temp := substring-before($orgRecord/dcterms_identifier/text(),concat("/",$fileName))
 let $namespace := local:substring-after-last($temp,"/")
@@ -133,7 +130,15 @@ return (
                 <dsw:atEvent>
                     <rdf:Description rdf:about='{$orgRecord/dcterms_identifier/text()||"#"||$occurrenceDate||"eve"}'>{
                       <rdf:type rdf:resource="http://rs.tdwg.org/dwc/terms/Event"/>,
-                      <dwc:eventDate rdf:datatype="http://www.w3.org/2001/XMLSchema#date">{$occurrenceDate}</dwc:eventDate>,
+                      
+                      if (string-length($occurrenceDate) = 10)
+                      then (<dwc:eventDate rdf:datatype="http://www.w3.org/2001/XMLSchema#date">{$occurrenceDate}</dwc:eventDate>)
+                      else (
+                           if (string-length($occurrenceDate) = 4)
+                           then (<dwc:eventDate rdf:datatype="http://www.w3.org/2001/XMLSchema#gYear">{$occurrenceDate}</dwc:eventDate>)
+                           else (<dwc:eventDate>{$occurrenceDate}</dwc:eventDate>)
+                           ),
+                      
                         <dsw:locatedAt>
                            <rdf:Description rdf:about='{$orgRecord/dcterms_identifier/text()||"#"||$occurrenceDate||"loc"}'>{
                              <rdf:type rdf:resource="http://purl.org/dc/terms/Location"/>,
