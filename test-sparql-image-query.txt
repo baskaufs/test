@@ -1,0 +1,29 @@
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX dcmitype: <http://purl.org/dc/dcmitype/>
+PREFIX dwc: <http://rs.tdwg.org/dwc/terms/>
+PREFIX dc: <http://purl.org/dc/elements/1.1/>
+PREFIX ac: <http://rs.tdwg.org/ac/terms/>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX dwciri:   <http://rs.tdwg.org/dwc/iri/>
+PREFIX dsw: <http://purl.org/dsw/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX mbank: <http://www.morphbank.net/schema/morphbank#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xmp: <http://ns.adobe.com/xap/1.0/>
+PREFIX xmpRights: <http://ns.adobe.com/xap/1.0/rights/>
+PREFIX blocal: <http://bioimages.vanderbilt.edu/rdf/local#> 
+
+SELECT DISTINCT ?image
+WHERE {
+?identification dwc:class "Aves".
+?organism dsw:hasIdentification ?identification.
+?organism foaf:depiction ?image.
+?organism dsw:hasOccurrence ?occurrence.
+?occurrence dsw:atEvent ?event.
+?event dsw:locatedAt ?location.
+?location dwc:stateProvince "Hawaii".
+}
+ORDER BY ?person
+LIMIT 50

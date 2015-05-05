@@ -467,7 +467,7 @@ let $xmlImagesToWrite := csv:parse($imagesToWriteDoc, map { 'header' : false() }
 Delete this section if serving the files directly
 :)
 
-return (file:write("c:\test\bioimages.rdf",
+return (file:write("c:\test\images.rdf",
 
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
