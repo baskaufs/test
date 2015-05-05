@@ -365,7 +365,7 @@ else if ($type="tn")
         then (  
             <ac:variantLiteral>Thumbnail</ac:variantLiteral>,
             <ac:variant rdf:resource ="http://rs.tdwg.org/ac/terms/Thumbnail" />,
-            <ac:accessURI rdf:resource ="{$dom}/tn/{$ns}/t{$img}.jpg" />,
+            <ac:accessURI rdf:resource ="{$dom}/tn/{$ns}/t{$img}" />,
             <exif:PixelXDimension rdf:datatype="http://www.w3.org/2001/XMLSchema#int">{round($x*local:calculate-shrink($x, $y, 100))}</exif:PixelXDimension>,
             <exif:PixelYDimension rdf:datatype="http://www.w3.org/2001/XMLSchema#int">{round($y*local:calculate-shrink($x, $y, 100))}</exif:PixelYDimension>
             )
@@ -373,7 +373,7 @@ else if ($type="tn")
                 then (  
                     <ac:variantLiteral>Lower Quality</ac:variantLiteral>,
                     <ac:variant rdf:resource ="http://rs.tdwg.org/ac/terms/LowerQuality" />,
-                    <ac:accessURI rdf:resource ="{$dom}/lq/{$ns}/w{$img}.jpg" />,
+                    <ac:accessURI rdf:resource ="{$dom}/lq/{$ns}/w{$img}" />,
                     <exif:PixelXDimension rdf:datatype="http://www.w3.org/2001/XMLSchema#int">{round($x*local:calculate-shrink($x, $y, 480))}</exif:PixelXDimension>,
                     <exif:PixelYDimension rdf:datatype="http://www.w3.org/2001/XMLSchema#int">{round($y*local:calculate-shrink($x, $y, 480))}</exif:PixelYDimension>
                     )
@@ -381,7 +381,7 @@ else if ($type="tn")
                     then (  
                         <ac:variantLiteral>Good Quality</ac:variantLiteral>,
                         <ac:variant rdf:resource ="http://rs.tdwg.org/ac/terms/GoodQuality" />,
-                        <ac:accessURI rdf:resource ="{$dom}/gq/{$ns}/g{$img}.jpg" />,
+                        <ac:accessURI rdf:resource ="{$dom}/gq/{$ns}/g{$img}" />,
                         <exif:PixelXDimension rdf:datatype="http://www.w3.org/2001/XMLSchema#int">{round($x*local:calculate-shrink($x, $y, 1024))}</exif:PixelXDimension>,
                         <exif:PixelYDimension rdf:datatype="http://www.w3.org/2001/XMLSchema#int">{round($y*local:calculate-shrink($x, $y, 1024))}</exif:PixelYDimension>
                         )
@@ -516,7 +516,7 @@ return (
         
         let $accessPoints:=("bq","tn","lq","gq")
         for $ap in $accessPoints
-        return (local:service-access-point($domain, $namespace, $image, $iri, $ap, $imgRecord/exif_PixelXDimension/text(),$imgRecord/exif_PixelYDimension/text(), $imgRecord/ac_hasServiceAccessPoint/text() )
+        return (local:service-access-point($domain, $namespace, $imgRecord/fileName/text(), $iri, $ap, $imgRecord/exif_PixelXDimension/text(),$imgRecord/exif_PixelYDimension/text(), $imgRecord/ac_hasServiceAccessPoint/text() )
       ),
         <rdf:Description rdf:about="{$iri}.rdf">
           {local:rdf-document-metadata($iri, $imgRecord/dcterms_modified/text())}
