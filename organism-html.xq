@@ -85,6 +85,17 @@ declare function local:get-taxon-name-clean
                else ()
 };
 
+declare function local:get-cameo-filename
+($cameoID,$image) as xs:string
+{
+if ($cameoID != "")
+then
+  for $cameo in $image
+  where $cameo/dcterms_identifier/text()=$cameoID
+  return $cameo/fileName/text() 
+else ""
+};
+
 let $localFilesFolderUnix := "c:/test"
 
 (: Create root folder if it doesn't already exist. :)
@@ -136,8 +147,12 @@ let $filePath := concat($rootPath,"\", $namespace,"\", $fileName,".htm")
 let $tempQuoted1 := '"Image of organism" title="Image of organism" src="'
 let $tempQuoted2 := '" height="'
 let $tempQuoted3 := '"/>'
-let $cameoFileName := local:substring-after-last($orgRecord/cameo/text(),"/")
-let $temp2 := substring-before($orgRecord/cameo/text(),concat("/",$cameoFileName))
+
+(: Note: $cameoFileName will be the empty string if there is no value for $orgRecord/cameo :)
+let $cameoFileName := local:get-cameo-filename($orgRecord/cameo/text(),$xmlImages/csv/record)
+
+let $cameoLocalID := local:substring-after-last($orgRecord/cameo/text(),"/")
+let $temp2 := substring-before($orgRecord/cameo/text(),concat("/",$cameoLocalID))
 let $cameoNamespace := local:substring-after-last($temp2,"/")
 let $googleMapString := "http://maps.google.com/maps?output=classic&amp;q=loc:"||$orgRecord/dwc_decimalLatitude/text()||","||$orgRecord/dwc_decimalLongitude/text()||"&amp;t=h&amp;z=16"
 let $qrCodeString := "http://chart.apis.google.com/chart?chs=100x100&amp;cht=qr&amp;chld=|1&amp;chl=http%3A%2F%2Fbioimages.vanderbilt.edu%2F"||$namespace||"%2F"||$fileName||".htm"
@@ -223,8 +238,12 @@ return (file:create-dir(concat($rootPath,"\",$namespace)), file:write($filePath,
       <span>An individual of {$taxonNameMarkup}</span>,
       <br/>,
 
-      <a href="../{$cameoNamespace}/{$cameoFileName}.htm"><span id="orgimage"><img alt="Image of organism" title="Image of organism" src="../lq/{$cameoNamespace}/w{$cameoFileName}.jpg" /></span></a>,
-      <br/>,    
+      if ($cameoFileName != "")
+      then (
+            <a href="../{$cameoNamespace}/{$cameoLocalID}.htm"><span id="orgimage"><img alt="Image of organism" title="Image of organism" src="../lq/{$cameoNamespace}/w{$cameoFileName}" /></span></a>,
+            <br/>
+           )
+      else (),
 
       <h5>Permanent identifier for the individual:</h5>,
       <br/>,
