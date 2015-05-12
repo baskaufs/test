@@ -14,17 +14,21 @@ declare namespace geo="http://www.w3.org/2003/01/geo/wgs84_pos#";
 declare namespace blocal="http://bioimages.vanderbilt.edu/rdf/local#";
 
 declare function local:county-units
-($state as xs:string, $countryCode as xs:string) as xs:string
+($state, $countryCode) as xs:string
 {
-if ($countryCode = "US" or $countryCode = "CA")
-then 
-  if ($state = "Louisiana")
-  then " Parish"
-  else if ($state="Alaska")
-        then " Borough"
-        else " County"
+if ($state != "")
+then  
+  if ($countryCode = "US" or $countryCode = "CA")
+  then 
+    if ($state = "Louisiana")
+    then " Parish"
+    else if ($state="Alaska")
+          then " Borough"
+          else " County"
+  else
+    ""
 else
-  ""
+""
 };
 
 declare function local:substring-after-last
@@ -84,7 +88,7 @@ declare function local:get-taxon-name-clean
 let $localFilesFolderUnix := "c:/test"
 
 (: Create root folder if it doesn't already exist. :)
-let $rootPath := "c:\test"
+let $rootPath := "c:\bioimages-test-implementation"
 (: "file:create-dir($dir as xs:string) as empty-sequence()" will create a directory or do nothing if it already exists :)
 let $nothing := file:create-dir($rootPath)
 
