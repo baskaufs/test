@@ -13,6 +13,8 @@ declare namespace txn="http://lod.taxonconcept.org/ontology/txn.owl#";
 declare namespace geo="http://www.w3.org/2003/01/geo/wgs84_pos#";
 declare namespace blocal="http://bioimages.vanderbilt.edu/rdf/local#";
 
+(: TODO This does not do anything with links.csv :)
+
 declare function local:county-units
 ($state, $countryCode) as xs:string
 {
