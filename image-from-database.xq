@@ -16,6 +16,7 @@ declare namespace exif="http://ns.adobe.com/exif/1.0/";
 declare namespace Iptc4xmpExt="http://iptc.org/std/Iptc4xmpExt/2008-02-29/";
 declare namespace foaf="http://xmlns.com/foaf/0.1/";
 declare namespace geo="http://www.w3.org/2003/01/geo/wgs84_pos#";
+declare namespace blocal="http://bioimages.vanderbilt.edu/rdf/local#";
 (:
 TODO:
 think about what last modified means (document generated vs. database record updated),
@@ -313,7 +314,7 @@ then <ac:caption>{$record/ac_caption/text()}</ac:caption>
 else (),
 
 <ac:attributionLinkURL>{$id}.htm</ac:attributionLinkURL>,
-<local:contactURL>{$agent/contactURL/text()}</local:contactURL>,
+<blocal:contactURL>{$agent/contactURL/text()}</blocal:contactURL>,
 <xmp:Rating>{$record/xmp_Rating/text()}</xmp:Rating>
       )
 };
