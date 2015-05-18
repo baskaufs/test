@@ -125,7 +125,7 @@ let $textTourButtons := http:send-request(<http:request method='get' href='https
 let $xmlTourButtons := csv:parse($textTourButtons, map { 'header' : true() })
 
 let $textLinks := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/links.csv'/>)[2]
-let $xmlLinks := csv:parse($textLinks, map { 'header' : true() })
+let $xmlLinks := csv:parse($textLinks, map { 'header' : true(),'separator' : "|" })
 
 let $lastPublishedDoc := fn:doc(concat('file:///',$localFilesFolderUnix,'/last-published.xml'))
 let $lastPublished := $lastPublishedDoc/body/dcterms:modified/text()
