@@ -102,7 +102,7 @@ if ($hres)
 then (<br/>,
 <h6><em>Click on the image to access highest available resolution version.</em></h6>)
 else (),
-<br />
+<br />,<br/>
 };
 
 declare function local:determination-info
