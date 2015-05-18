@@ -90,10 +90,18 @@ declare function local:rdfa-page-metadata
 };
 
 declare function local:show-cameo
-($dom as xs:string, $ns as xs:string, $img as xs:string, $fileName as xs:string)
+($dom as xs:string, $ns as xs:string, $img as xs:string, $fileName as xs:string, $cap, $hres)
 {
 <table border="0" cellspacing="0"><tr><td><a href="../index.htm"><img alt="home button" src="../logo.jpg" width="58" /></a></td><td valign="top"><a href="#" onclick='window.location.replace("../metadata.htm?{$ns}/{$img}/metadata/img");'>&#8239;Enable image database and site navigation</a></td></tr></table>,
 <div id="replaceImage"><a property="contentUrl" href="{$dom}/gq/{$ns}/g{$fileName}"><img alt="Image {$dom}/lq/{$ns}/w{$fileName}" src="{$dom}/lq/{$ns}/w{$fileName}" /></a></div>,
+if ($cap)
+then (<br/>,
+<span property="caption">{$cap}</span>)
+else (),
+if ($hres)
+then (<br/>,
+<h6><em>Click on the image to access highest available resolution version.</em></h6>)
+else (),
 <br />
 };
 
@@ -299,6 +307,11 @@ return (
 <Iptc4xmpExt:CVterm rdf:resource ="http://bioimages.vanderbilt.edu/rdf/stdview{$record/view/text()}" />,
 <dcterms:title xml:lang="en">{$record/dcterms_title/text()}</dcterms:title>,
 <dcterms:description xml:lang="en">{$record/dcterms_description/text()}</dcterms:description>,
+
+if ($record/ac_caption/text())
+then <ac:caption>{$record/ac_caption/text()}</ac:caption>
+else (),
+
 <ac:attributionLinkURL>{$id}.htm</ac:attributionLinkURL>,
 <local:contactURL>{$agent/contactURL/text()}</local:contactURL>,
 <xmp:Rating>{$record/xmp_Rating/text()}</xmp:Rating>
@@ -493,7 +506,7 @@ return
         <body vocab="http://schema.org/" prefix="dcterms: http://purl.org/dc/terms/ foaf: http://xmlns.com/foaf/0.1/ dcmitype: http://purl.org/dc/dcmitype/ cc: http://creativecommons.org/ns#">
           {local:rdfa-page-metadata($imageRecord/dcterms_identifier/text())}
           <div id="paste" resource="{$imageRecord/dcterms_identifier/text()}" typeof="dcmitype:StillImage ImageObject">
-            {local:show-cameo($domain, $namespace, $image, $imageRecord/fileName/text())}
+            {local:show-cameo($domain, $namespace, $image, $imageRecord/fileName/text(), $imageRecord/ac_caption/text(), $imageRecord/ac_hasServiceAccessPoint/text())}
             {
             for $orgRecord in $xmlOrganisms//record
             where $orgRecord/dcterms_identifier/text() = $imageRecord/foaf_depicts/text()

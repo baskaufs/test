@@ -299,6 +299,11 @@ return (
 <Iptc4xmpExt:CVterm rdf:resource ="http://bioimages.vanderbilt.edu/rdf/stdview{$record/view/text()}" />,
 <dcterms:title xml:lang="en">{$record/dcterms_title/text()}</dcterms:title>,
 <dcterms:description xml:lang="en">{$record/dcterms_description/text()}</dcterms:description>,
+
+if ($record/ac_caption/text())
+then <ac:caption>{$record/ac_caption/text()}</ac:caption>
+else (),
+
 <ac:attributionLinkURL>{$id}.htm</ac:attributionLinkURL>,
 <local:contactURL>{$agent/contactURL/text()}</local:contactURL>,
 <xmp:Rating>{$record/xmp_Rating/text()}</xmp:Rating>
