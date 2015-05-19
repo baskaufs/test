@@ -54,7 +54,7 @@ declare function local:get-taxon-name-markup
          then (<em>{$nameRecord[1]/dwc_genus/text()||" "||$nameRecord[1]/dwc_specificEpithet/text()}</em>," ("||$nameRecord[1]/dwc_vernacularName/text()||")")
          else 
            if ($nameRecord[1]/dwc_taxonRank/text() = "genus")
-           then (<em>{$nameRecord[1]/dwc_genus/text()}</em>," ("||$nameRecord[1]/dwc_vernacularName/text(),")")
+           then (<em>{$nameRecord[1]/dwc_genus/text()}</em>," sp. ("||$nameRecord[1]/dwc_vernacularName/text(),")")
            else 
              if ($nameRecord[1]/dwc_taxonRank/text() = "subspecies")
              then (<em>{$nameRecord[1]/dwc_genus/text()||" "||$nameRecord[1]/dwc_specificEpithet/text()}</em>," ssp. ",<em>{$nameRecord/dwc_infraspecificEpithet/text()}</em>, " (", $nameRecord[1]/dwc_vernacularName/text(),")")
@@ -77,7 +77,7 @@ declare function local:get-taxon-name-clean
          then ($nameRecord[1]/dwc_genus/text()||" "||$nameRecord[1]/dwc_specificEpithet/text()||" ("||$nameRecord[1]/dwc_vernacularName/text()||")")
          else 
            if ($nameRecord[1]/dwc_taxonRank/text() = "genus")
-           then ($nameRecord[1]/dwc_genus/text()||" ("||$nameRecord[1]/dwc_vernacularName/text(),")")
+           then ($nameRecord[1]/dwc_genus/text()||" sp. ("||$nameRecord[1]/dwc_vernacularName/text(),")")
            else 
              if ($nameRecord[1]/dwc_taxonRank/text() = "subspecies")
              then ($nameRecord[1]/dwc_genus/text()||" "||$nameRecord[1]/dwc_specificEpithet/text()||" ssp. "||$nameRecord/dwc_infraspecificEpithet/text()||" (", $nameRecord[1]/dwc_vernacularName/text(),")")
@@ -328,7 +328,7 @@ return (file:create-dir(concat($rootPath,"\",$namespace)), file:write($filePath,
              then (<em>{$nameRecord/dwc_genus/text()||" "||$nameRecord/dwc_specificEpithet/text()}</em>," ("||$nameRecord/dwc_vernacularName/text()||")")
              else 
                if ($nameRecord/dwc_taxonRank/text() = "genus")
-               then (<em>{$nameRecord/dwc_genus/text()}</em>," ("||$nameRecord/dwc_vernacularName/text(),")")
+               then (<em>{$nameRecord/dwc_genus/text()}</em>," sp. ("||$nameRecord/dwc_vernacularName/text(),")")
                else 
                  if ($nameRecord/dwc_taxonRank/text() = "subspecies")
                  then (<em>{$nameRecord/dwc_genus/text()||" "||$nameRecord/dwc_specificEpithet/text()}</em>," ssp. ",<em>{$nameRecord/dwc_infraspecificEpithet/text()}</em>, " (", $nameRecord/dwc_vernacularName/text(),")")

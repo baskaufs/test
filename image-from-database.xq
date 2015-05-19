@@ -122,7 +122,7 @@ return (
              then (<em>{$name/dwc_genus/text()||" "||$name/dwc_specificEpithet/text()}</em>," ("||$name/dwc_vernacularName/text()||")")
              else 
                if ($name/dwc_taxonRank/text() = "genus")
-               then (<em>{$name/dwc_genus/text()}</em>," ("||$name/dwc_vernacularName/text(),")")
+               then (<em>{$name/dwc_genus/text()}</em>," sp. ("||$name/dwc_vernacularName/text(),")")
                else 
                  if ($name/dwc_taxonRank/text() = "subspecies")
                  then (<em>{$name/dwc_genus/text()||" "||$name/dwc_specificEpithet/text()}</em>," ssp. ",<em>{$name/dwc_infraspecificEpithet/text()}</em>, " (", $name/dwc_vernacularName/text(),")")
