@@ -101,7 +101,7 @@ else ""
 let $localFilesFolderUnix := "c:/test"
 
 (: Create root folder if it doesn't already exist. :)
-let $rootPath := "c:\bioimages-test-implementation"
+let $rootPath := "c:\bioimages"
 (: "file:create-dir($dir as xs:string) as empty-sequence()" will create a directory or do nothing if it already exists :)
 let $nothing := file:create-dir($rootPath)
 
@@ -124,7 +124,7 @@ let $textAgents := http:send-request(<http:request method='get' href='https://ra
 let $xmlAgents := csv:parse($textAgents, map { 'header' : true(),'separator' : "|" })
 
 let $textTourButtons := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/tour-buttons.csv'/>)[2]
-let $xmlTourButtons := csv:parse($textTourButtons, map { 'header' : true() })
+let $xmlTourButtons := csv:parse($textTourButtons, map { 'header' : true(),'separator' : "|" })
 
 let $textLinks := http:send-request(<http:request method='get' href='https://raw.githubusercontent.com/baskaufs/Bioimages/master/links.csv'/>)[2]
 let $xmlLinks := csv:parse($textLinks, map { 'header' : true(),'separator' : "|" })
