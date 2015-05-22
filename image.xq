@@ -19,6 +19,7 @@ declare namespace geo="http://www.w3.org/2003/01/geo/wgs84_pos#";
 declare namespace blocal="http://bioimages.vanderbilt.edu/rdf/local#";
 (:
 TODO: 
+fix bad link rel="meta" 
 think about what last modified means (document generated vs. database record updated),
 Is Bioimages http://biocol.org/urn:lsid:biocol.org:col:35115 ?
 Fix DOCTYPE and XML declarations,

@@ -1,4 +1,7 @@
 xquery version "3.0";
+declare namespace rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+declare namespace dc="http://purl.org/dc/elements/1.1/";
+declare namespace dcterms="http://purl.org/dc/terms/";
 (:
 TODO: 
 Discover Live harvest file
@@ -6,7 +9,7 @@ EOL harvest file
 Morphbank push file
 GBIF DwC-A files
 Files for list management.  Note: it should be possible to generate these files using a hack of the existing code since the output is basically the same except that there must be a match with the TSN in the list's list of taxa.
-RSS feeds and sitemap XML
+sitemap XML
 :)
 
 (:
@@ -27,10 +30,11 @@ declare function local:substring-after-last
 let $localFilesFolderUnix := "c:/test"
 
 (: Create root folder if it doesn't already exist. :)
-let $rootPath := "c:\test"
+let $rootPath := "c:\bioimages"
 (: "file:create-dir($dir as xs:string) as empty-sequence()" will create a directory or do nothing if it already exists :)
 let $nothing := file:create-dir($rootPath)
-let $nothingElse := file:create-dir(concat($rootPath,"\list"))
+let $nothing := file:create-dir(concat($rootPath,"\list"))
+let $nothing := file:create-dir(concat($rootPath,"\rdf"))
 
 (:
 *********** Get data from GitHub *********
@@ -118,6 +122,74 @@ return (
                                )       
                 }</DarwinRecordSet>
             ),
+
+      file:write(concat($rootPath,"\rdf\images.rss"),
+        <rdf:RDF xmlns:rss="http://purl.org/rss/1.0/"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns:dc="http://purl.org/dc/elements/1.1/"
+        xmlns:dcterms="http://purl.org/dc/terms/"
+        >{
+            <rss:channel rdf:about="http://bioimages.vanderbilt.edu/rdf/images.rss">
+                <rss:title>Images in the Bioimages database</rss:title>
+                <rss:link>http://bioimages.vanderbilt.edu/</rss:link>
+                <rss:description>This channel provides an RDF link to all images in the database so that they can be discovered by Linked Data clients.</rss:description>
+                <dcterms:isReferencedBy rdf:resource="http://bioimages.vanderbilt.edu/index.rdf"/>
+                <rss:items><rdf:Seq>{
+                        for $img in $xmlImages//record
+                        order by $img/dcterms_modified descending
+                        return (
+                               <rdf:li rdf:resource="{$img/dcterms_identifier/text()}"/>
+                               )
+             }</rdf:Seq></rss:items>
+           </rss:channel>,
+          
+          for $img in $xmlImages//record
+          order by $img/dcterms_modified descending
+          return (
+                 <rss:item rdf:about="{$img/dcterms_identifier/text()}">
+                   <rss:title>{$img/dcterms_description/text()}</rss:title>
+                   <rss:link>{$img/dcterms_identifier/text()}</rss:link>
+                   <dc:date>{$img/dcterms_modified/text()}</dc:date>
+                 </rss:item>
+                 )
+
+        }</rdf:RDF>
+         )
+        ,
+
+      file:write(concat($rootPath,"\rdf\individuals.rss"),
+        <rdf:RDF xmlns:rss="http://purl.org/rss/1.0/"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns:dc="http://purl.org/dc/elements/1.1/"
+        xmlns:dcterms="http://purl.org/dc/terms/"
+        >{
+            <rss:channel rdf:about="http://bioimages.vanderbilt.edu/rdf/individuals.rss">
+                <rss:title>Individual organisms in the Bioimages database</rss:title>
+                <rss:link>http://bioimages.vanderbilt.edu/</rss:link>
+                <rss:description>This channel provides an RDF link to all organisms in the database so that they can be discovered by Linked Data clients.</rss:description>
+                <dcterms:isReferencedBy rdf:resource="http://bioimages.vanderbilt.edu/index.rdf"/>
+                <rss:items><rdf:Seq>{
+                        for $org in $xmlOrganisms//record
+                        order by $org/dcterms_modified descending
+                        return (
+                               <rdf:li rdf:resource="{$org/dcterms_identifier/text()}"/>
+                               )
+             }</rdf:Seq></rss:items>
+           </rss:channel>,
+          
+          for $org in $xmlOrganisms//record
+          order by $org/dcterms_modified descending
+          return (
+                 <rss:item rdf:about="{$org/dcterms_identifier/text()}">
+                   <rss:title>{concat("Organism with GUID: ",$org/dcterms_identifier/text())}</rss:title>
+                   <rss:link>{$org/dcterms_identifier/text()}</rss:link>
+                   <dc:date>{$org/dcterms_modified/text()}</dc:date>
+                 </rss:item>
+                 )
+
+        }</rdf:RDF>
+         )
+            ,
 
       file:write(concat($rootPath,"\status.xml"),
                 <root>{
