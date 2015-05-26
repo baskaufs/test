@@ -2,6 +2,7 @@ xquery version "3.0";
 declare namespace rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 declare namespace dc="http://purl.org/dc/elements/1.1/";
 declare namespace dcterms="http://purl.org/dc/terms/";
+declare namespace sitemap="http://www.sitemaps.org/schemas/sitemap/0.9";
 (:
 TODO: 
 Discover Live harvest file
@@ -9,6 +10,7 @@ EOL harvest file
 Morphbank push file
 GBIF DwC-A files
 Files for list management.  Note: it should be possible to generate these files using a hack of the existing code since the output is basically the same except that there must be a match with the TSN in the list's list of taxa.
+NCBI index file
 sitemap XML
 :)
 
@@ -190,6 +192,28 @@ return (
         }</rdf:RDF>
          )
             ,
+
+      file:write(concat($rootPath,"\sitemap.xml"),
+        <sitemap:urlset xmlns:sitemap="http://www.sitemaps.org/schemas/sitemap/0.9">{
+          for $org in $xmlOrganisms//record
+          order by $org/dcterms_modified descending
+          return (
+                 <sitemap:url>
+                   <sitemap:loc>{$org/dcterms_identifier/text()}</sitemap:loc>
+                   <sitemap:lastmod>{$org/dcterms_modified/text()}</sitemap:lastmod>
+                 </sitemap:url>
+                 ),
+          for $img in $xmlImages//record
+          order by $img/dcterms_modified descending
+          return (
+                 <sitemap:url>
+                   <sitemap:loc>{$img/dcterms_identifier/text()}</sitemap:loc>
+                   <sitemap:lastmod>{$img/dcterms_modified/text()}</sitemap:lastmod>
+                 </sitemap:url>
+                 )
+        }</sitemap:urlset>
+         )
+         ,
 
       file:write(concat($rootPath,"\status.xml"),
                 <root>{
