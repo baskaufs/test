@@ -1,3 +1,5 @@
 # Compiled python files don't belong in a repository, since they're automatically
 # regenerated from the corresponding .py sources at runtime.
 *.pyc
+
+# useless comment for test
