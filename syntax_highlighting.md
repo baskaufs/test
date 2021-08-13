@@ -1,4 +1,4 @@
-```json
+```JSON
 {
 "@type": "TableGroup",
 "@context": "http://www.w3.org/ns/csvw",
