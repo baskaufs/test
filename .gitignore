@@ -3,3 +3,4 @@
 *.pyc
 
 # useless comment for test
+.DS_Store
